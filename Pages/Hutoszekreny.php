@@ -17,12 +17,12 @@ class Hutoszekreny extends Page
     protected ?array $hutoszekreny = null;
     protected string $viewsgyoker = __DIR__ . "/views/hutoszekreny/";
     protected bool $irasjog = false;
+    protected array $jsfiles = ['Pages/views/hutoszekreny/assets/listautocomplete.js'];
     protected FormBuilder $form;
     protected array $views = [
         'hutoszekreny' => 'hutoszekreny.php',
         'hutoszekrenyek' => 'hutoszekrenyek.php',
-        'szerkeszt' => 'szerkeszt.php',
-        'hutotartalom' => 'hutotartalom.php'
+        'szerkeszt' => 'szerkeszt.php'
     ];
 
     public function Router(array $params) : Page {

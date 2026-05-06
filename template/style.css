@@ -1413,3 +1413,28 @@ footer {
 .alapanyag-adatlap div:nth-child(odd) {
     font-weight: bold;
 }
+
+.autocomplete-list {
+    position: absolute;
+    background: white;
+    border: 1px solid #ccc;
+    width: 200px;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.autocomplete-list div {
+    padding: 5px;
+    cursor: pointer;
+}
+
+.autocomplete-list .active {
+    background: #007bff;
+    color: white;
+}
+
+.alapanyag-sor {
+    position: relative;
+    margin-bottom: 5px;
+}
