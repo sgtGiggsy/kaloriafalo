@@ -1,0 +1,77 @@
+<?php
+
+namespace Kaloriafalo\template;
+
+use Kaloriafalo\Classes\Helpers;
+use Kaloriafalo\Classes\Oldalgyujto;
+use Kaloriafalo\Classes\Settings;
+use Kaloriafalo\includes\Jogszint;
+
+$navopen = false;
+$parent = null;
+$jobbraigazit = false;
+$userszint = Helpers::UserSzint();
+//print_r(GrafikaiElemek::$ikonok);
+?><ul class="mobile">
+    <li class="dropdown">
+        <button class="menubutton" id="menunyitzar" aria-label="Menü">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </li>
+    <li>
+        <a href="<?=$RootPath?>/"><?=GrafikaiElemek::$ikonok['oldalminilogo']?></a>
+    </li>
+    <li></li>
+</ul>
+<ul class="links" id="linkek"><?php
+    foreach (Oldalgyujto::Menupontok() as $kulcs => $menuelem) {
+        if($menuelem['menuben']
+            && ($menuelem['lathatosag'] == "mindenki"
+                || ($menuelem['lathatosag'] != "vendeg" && Jogszint::{$menuelem['lathatosag']}->value <= $userszint))
+                || ($menuelem['lathatosag'] == "vendeg" && $userszint == 0)
+            ) {
+
+            $renderelem = ($menuelem['ikon']) ? GrafikaiElemek::$ikonok[$menuelem['ikon']] : $menuelem['menupont'];
+
+            $gyokerelem = $menuelem['szulo'] === true || $menuelem['szulo'] === null;
+
+            if($kulcs == 'fooldal')
+                $url = $RootPath;
+            elseif($menuelem['szulo'] === true)
+                $url = "#";
+            else
+                $url = $RootPath . "/" . $kulcs;
+
+            if($kulcs == 'felhasznalo')
+                $menuelem['menupont'] = Settings::$usernev;
+
+            if($gyokerelem && $navopen) {
+                ?></nav></li><?php
+                $navopen = false;
+            }
+
+            if($menuelem['szulo'] === true) {
+                $parent = $kulcs;
+                $navopen = true;
+            }
+
+            if(!$jobbraigazit && ($kulcs == 'adminisztracio' || $kulcs == 'felhasznalo' || $kulcs == 'belepes')) {
+                $jobbraigazit = true;
+                ?><li style="flex-grow: 1"></li><?php
+            }
+
+            ?><li<?=($gyokerelem) ? ' class="fomenugyoker"' : ''?>>
+                <a href="<?=$url?>"<?=($gyokerelem && !$menuelem['ikon']) ? ' class="fomenuelem"' : '' ?>>
+                    <?=(!$gyokerelem) ? "<span>" : ""?>
+                        <?=$renderelem?>
+                    <?=(!$gyokerelem) ? "</span>" : ""?>
+                </a>
+            <?= ($menuelem['szulo'] === true) ? '<nav class="dropdown-content">' : '</li>' ?><?php
+        }
+    }
+    if($navopen) {
+        ?></nav></li><?php
+    }
+?></ul>

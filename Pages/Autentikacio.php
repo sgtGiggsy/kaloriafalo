@@ -1,0 +1,330 @@
+<?php
+
+namespace Kaloriafalo\Pages;
+
+use Kaloriafalo\Classes\Controller;
+use Kaloriafalo\Classes\Logging;
+use Kaloriafalo\Classes\MailHandler;
+use Kaloriafalo\Classes\Settings;
+
+class Autentikacio extends Page
+{
+    public ?string $eredmeny = null;
+    private bool $megerosit = false;
+    private ?string $megerositokod;
+    protected string $viewsgyoker = __DIR__ . "/views/autentikacio/";
+    protected array $views = [
+        'belepes' => 'belepes.php',
+        'regisztracio' => 'regisztracio.php',
+        'sikertelenreg' => 'sikertelenreg.php',
+        'sikeresreg' => 'sikeresreg.php',
+        'elfelejtettjelszo' => 'elfelejtettjelszo.php',
+        'jelszoigenyelve' => 'jelszoigenyelve.php',
+        'regmegerosit' => 'regmegerosit.php',
+        'ujjelszo' => 'ujjelszo.php',
+        'jelszocsere' => 'jelszocsere.php'
+    ];
+
+    public function Router(array $params) : Page {
+        $megerositokod = null;
+        if(in_array('megerosit', $params)) {
+            $key = array_search('megerosit', $params);
+            if(isset($params[$key + 1])) {
+                $megerositokod = $params[$key + 1];
+                if($this->type == 'regisztracio') {
+                    $this->megerosit = $this->UserMegerosit($megerositokod);
+                }
+                else
+                    $this->megerosit = $this->ElfelejtettJelszoMegerosit($megerositokod);
+            }
+            if(!$this->megerosit)
+                return $this;
+        }
+
+        if($this->type == 'regisztracio') {
+            if(in_array('sikeres', $params))
+                $this->view = __DIR__ . "/views/autentikacio/" . $this->views['sikeresreg'];
+            elseif(in_array('sikertelen', $params))
+                $this->aloldal = 'sikertelenreg';
+            elseif($megerositokod) {
+                $this->view = __DIR__ . "/views/autentikacio/" . $this->views['regmegerosit'];
+            }
+        }
+
+        if($this->type == 'elfelejtettjelszo') {
+            if(in_array('megerosit', $params))
+                $this->view = __DIR__ . "/views/autentikacio/" . $this->views['ujjelszo'];
+            elseif(in_array('sikeres', $params))
+                $this->view = __DIR__ . "/views/autentikacio/" . $this->views['jelszoigenyelve'];
+        }
+
+        return $this;
+    }
+
+    public function HtmlHead() : void {
+        $this->keywords = array();
+        $this->canonical = ROOT_PATH . '/' . $this->type;
+        $this->ogtype = "website";
+        $this->publishtime = null;
+        $this->robots = '<meta name="robots" content="noindex, nofollow">';
+        $this->shareimage = null;
+        if($this->type == "belepes") {
+            $this->title .= " - Bejelentkezés";
+            $this->sitedesc = "Jelentkezz be a további tartalmak eléréséhez.";
+            $this->cimke = "bejelentkezés";
+        }
+        elseif($this->type == "regisztracio") {
+            $this->title .= " - Regisztráció";
+            $this->sitedesc = "Regisztrálj, hogy saját tartalommal bővíthesd az oldalt!";
+            $this->cimke = "regisztráció";
+        }
+        elseif($this->type == "jelszoemlekezteto") {
+            $this->title .= " - Jelszóemlékeztető";
+            $this->sitedesc = "Elfelejtett jelszó";
+            $this->cimke = "jelszóemlékeztető";
+        }
+        $this->ablakcim = $this->title;
+        include(ROOT_DIR . "/includes/htmlheader.inc.php");
+    }
+
+    private function Belepes() : bool {
+        // Felhasználó beléptetése/jogosultsági szintjének ellenőrzése
+        $loginsuccess = false;
+        $this->mixintext = "Hibás felhasználónév, vagy jelszó!";
+        $usernev = $_POST['usernev'] ?? null;
+        if($usernev)
+        {
+            // Bejelentkezési rate limit
+            $kiserletszam = AutentikacioDB::FailedLoginNum($usernev);
+
+            if($kiserletszam > 5)
+            {
+                http_response_code(429);
+                $this->eredmeny = "letiltva";
+                $this->mixintext = "Túl sok hibás bejelentkezési kísérlet! Várj pár percet az újrapróbálkozással!";
+            }
+            else
+            {
+                $loginhandler = AutentikacioDB::LoginHandler($usernev);
+                
+                if(!$loginhandler)
+                {
+                    // Ha nem létezik a usernév, akkor is futtatunk egy kamu verify-t,
+                    // hogy a válaszidőből ne legyen árulkodó
+                    $dummy_hash = '$2y$10$usesomesillystringforexample';
+                    password_verify($_POST['jelszo'], $dummy_hash);
+                }
+                else
+                {
+                    /** @var int $uid */
+                    $uid = $loginhandler['felhasznalo_id'];
+                    $password = $loginhandler['jelszo'];
+                    if ($password && password_verify($_POST['jelszo'], $password))
+                    {
+                        if($this->type == "belepes")
+                            $this->redirtarget = ROOT_PATH;
+                        //unset($_SESSION);
+                        $_SESSION['useragent'] = $_SERVER['HTTP_USER_AGENT'] ?? '';
+                        $_SESSION['uid'] = $uid;
+                        session_regenerate_id(true);
+                        $loginsuccess = true;
+
+                        $this->eredmeny = "siker";
+                        $this->mixintext = 'Sikeres bejelentkezés';
+
+                        $session_id = Logging::SessionDB($uid);
+                        Logging::LogLogin($uid, $session_id);
+                    }
+                }
+            }
+
+            if(!$loginsuccess)
+            {
+                $session_id = Logging::SessionDB();
+                sleep(min($kiserletszam, 5));
+                Logging::LogFailedLogin($session_id);
+            }
+        }
+
+        return $loginsuccess;
+    }
+
+    private function Regisztracio() : bool {
+        $regisztracio = false;
+        $this->mixintext = "A regisztráció nem sikerült!";
+        $this->redirtarget = ROOT_PATH . "/regisztracio/sikertelen";
+
+        if(!Controller::RequiredValidator('usernev', 'jelszo', 'jelszoismetles', 'email', 'beleegyezes')) {
+            $this->mixintext = "Nem töltöttél ki minden kötelező mezőt!";
+            return false;
+        }
+
+        if($_POST['jelszo'] != $_POST['jelszoismetles']) {
+            $this->mixintext = "A jelszó, és megismételt jelszó mező tartalma nem egyezik!";
+            return false;
+        }
+
+        if(strlen($_POST['jelszo']) < 12) {
+            $this->mixintext = "A megadott jelszó hossza túl rövid!";
+            return false;
+        }
+
+        if(!preg_match('/[a-z]/', $_POST['jelszo']) ||
+            !preg_match('/[A-Z]/', $_POST['jelszo']) ||
+            !preg_match('/\d/', $_POST['jelszo']) ||
+            !preg_match('/[^a-zA-Z\d]/', $_POST['jelszo'])
+        ) {
+            $this->mixintext = "A megadott jelszó komplexsége nem megfelelő!";
+            return false;
+        }
+
+        if(!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
+            $this->mixintext = "Hibás a megadott emailcím formátuma!";
+            return false;
+        }
+
+        if(AutentikacioDB::UsernameCheck($_POST['usernev'])) {
+            $this->mixintext = "A megadott felhasználónév már foglalt!";
+            return false;
+        }
+
+        if(AutentikacioDB::EmailCheck($_POST['email'])) {
+            $this->mixintext = "A megadott email címhez már tartozik felhasználói fiók!";
+            return false;
+        }
+
+        $verifstring = bin2hex(random_bytes(16));
+        $hashedpassword = password_hash($_POST['jelszo'], PASSWORD_DEFAULT);
+        $ujuserid = AutentikacioDB::UserRegisztracio($_POST['usernev'], $_POST['email'], $hashedpassword, $verifstring);
+
+        if($ujuserid) {
+            $regisztracio = true;
+            HutoszekrenyDB::UjHutoszekreny($ujuserid);
+            $this->mixintext = "Sikeres regisztráció!";
+            $this->redirtarget = ROOT_PATH . "/regisztracio/sikeres";
+
+            $this->Mailer($_POST['email'], $verifstring, $_POST['usernev']);
+        }
+
+        return $regisztracio;
+    }
+
+    private function Elfelejtettjelszo() : bool {
+        $ret = false;
+        if(isset($_POST['email'])) {
+            $this->mixintext = "Új jelszó igényelve!";
+            $this->redirtarget = ROOT_PATH . "/elfelejtettjelszo/sikeres";
+            $verifstring = bin2hex(random_bytes(16));
+            $ret = AutentikacioDB::ElfelejtettJelszo($verifstring, $_POST['email']);
+            $this->Mailer($_POST['email'], $verifstring);
+        }
+        elseif(Controller::RequiredValidator('megerosit', 'jelszo', 'jelszoismetles')) {
+            if(!$this->ElfelejtettJelszoMegerosit($_POST['megerosit'])) {
+                $this->mixintext = "A megerősítőkód nem egyezik!";
+                $this->redirtarget = ROOT_PATH . "/elfelejtettjelszo/sikertelen";
+                return false;
+            }
+
+            if($_POST['jelszo'] != $_POST['jelszoismetles']) {
+                $this->mixintext = "A jelszó, és megismételt jelszó mező tartalma nem egyezik!";
+                $this->redirtarget = ROOT_PATH . "/elfelejtettjelszo/sikertelen";
+                return false;
+            }
+
+            $hashedpassword = password_hash($_POST['jelszo'], PASSWORD_DEFAULT);
+            if(AutentikacioDB::ElfelejtettUj($hashedpassword, $_POST['megerosit'])) {
+                $this->mixintext = "Új jelszó sikeresen beállítva!";
+                $this->redirtarget = ROOT_PATH . "/belepes";
+            }
+        }
+
+        return $ret;
+    }
+
+    private function Jelszocsere() : bool {
+        $this->mixintext = "A jelszó frissítése nem sikerült!";
+        $this->redirtarget = $_SERVER['REQUEST_URI'];
+        if(!Controller::RequiredValidator('regijelszo', 'ujjelszo', 'ujjelszoismetles')) {
+            $this->mixintext = "Nem adtál meg egy kötelező mezőt!";
+            return false;
+        }
+
+        if($_POST['ujjelszo'] != $_POST['ujjelszoismetles']) {
+            $this->mixintext = "A megadott új jelszó, és a megerősítése nem egyezik!";
+            return false;
+        }
+
+        if(!preg_match('/[a-z]/', $_POST['ujjelszo']) ||
+            !preg_match('/[A-Z]/', $_POST['ujjelszo']) ||
+            !preg_match('/\d/', $_POST['ujjelszo']) ||
+            !preg_match('/[^a-zA-Z\d]/', $_POST['ujjelszo'])
+        ) {
+            $this->mixintext = "A megadott új jelszó komplexsége nem megfelelő!";
+            return false;
+        }
+
+        $regijelszo = AutentikacioDB::GetJelszo(Settings::$uid);
+        if(!password_verify($_POST['regijelszo'], $regijelszo)) {
+            $this->mixintext = "Hibásan adtad meg a jelenlegi jelszavadat!";
+            return false;
+        }
+
+        $hashedpassword = password_hash($_POST['ujjelszo'], PASSWORD_DEFAULT);
+        if(password_verify($_POST['ujjelszo'], $regijelszo)) {
+            $this->mixintext = "A jelenlegi és új jelszavad megegyezik!";
+            return false;
+        }
+
+        if(AutentikacioDB::JelszoCsere(Settings::$uid, $hashedpassword)) {
+            $this->mixintext = "A jelszavad sikeresen megváltoztattad!";
+            return true;
+        }
+
+        return false;
+    }
+
+    private function UserMegerosit(string $megerositokod) : bool {
+        $uid = AutentikacioDB::MegerositoKodCheck($megerositokod);
+        if($uid)
+            return AutentikacioDB::UserMegerosit($uid);
+        else
+            return false;
+    }
+
+    private function ElfelejtettJelszoMegerosit(string $megerositokod) : bool {
+        if(AutentikacioDB::ElfelejtettJelszoMegerosit($megerositokod)) {
+            $this->megerositokod = $megerositokod;
+            return true;
+        }
+        else
+            return false;
+    }
+
+    private function Mailer(string $email, string $verifstring, ?string $usernev = null) : void {
+        $mailtargy = $message = null;
+        if($usernev) {
+            $mailtargy = "Regisztráció megerősítése";
+            $message = "<h1>Kedves $usernev!</h1>
+                <p>A regisztrációs folyamat befejezéséhez kattints az alábbi linkre</p>
+                <p><a href=" . ROOT_PATH . "/regisztracio/megerosit/$verifstring>Fiók aktiválása</a></p>
+                <p>vagy másold ki a linket, és illeszd a böngésződ címsorába!</p>
+                <p>" . ROOT_PATH . "/regisztracio/megerosit/$verifstring</p>";
+        }
+        else {
+            $usernev = AutentikacioDB::UsernevFromEmail($email);
+            if($usernev) {
+                $mailtargy = "Elfelejtett jelszó";
+                $message = "<h1>Kedves $usernev!</h1>
+                    <p>Valaki a nevedben jelszóvisszaállítást kezdeményezett a KalóriaFaló.hu weboldalon.</p>
+                    <p>Amennyiben te voltál az, úgy az alábbi linkre kattintva állíthatsz be magadnak új jelszót. A link mostantól egy órán keresztül fog élni.</p>
+                    <p><a href=" . ROOT_PATH . "/elfelejtettjelszo/megerosit/$verifstring>Jelszó visszaállítás</a></p>
+                    <p>Amennyiben nem te voltál az, levelünket nyugodtan hagyd figyelmen kívül!</p>";
+            }
+        }
+
+        if($mailtargy) {
+            $mail = new MailHandler($message, $email, $mailtargy);
+            $mail->Send();
+        }
+    }
+}

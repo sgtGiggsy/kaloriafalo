@@ -1,0 +1,5 @@
+Contact: mailto:security@kaloriafalo.hu
+Expires: 2030-12-31T22:59:00.000Z
+Preferred-Languages: hu,en
+Canonical: https://kaloriafalo.hu/.well-known/security.txt
+Policy: https://kaloriafalo.hu/security
