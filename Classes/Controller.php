@@ -72,9 +72,9 @@ class Controller
         $getparams = $_GET['params'] ?? '';
         $params = $getparams ? explode('/', $getparams) : [];
         (new APIResult($params ?? null))
-        ->Router()
-        ->Execute()
-        ->Render();
+            ->Router()
+            ->Execute()
+            ->Render();
     }
 
     public function PostController() : bool {
@@ -103,12 +103,12 @@ class Controller
             $eredmeny = $this->page->eredmeny;
         elseif($dberedmeny)
             $eredmeny = "siker";
+        else
+            $eredmeny = "hiba";
 
-        if($dberedmeny) {
-            $_SESSION['muvelet'] = $this->page->muvelet ?? null;
-            $_SESSION['mixintext'] = $this->page->mixintext ?? null;
-            $_SESSION['eredmeny'] = $eredmeny;
-        }
+        $_SESSION['muvelet'] = $this->page->muvelet ?? null;
+        $_SESSION['mixintext'] = $this->page->mixintext ?? null;
+        $_SESSION['eredmeny'] = $eredmeny;
 
         if($this->page->redirtarget)
             header("Location: " . $this->newuri);
@@ -126,8 +126,11 @@ class Controller
             if($_SESSION['muvelet'] == 'hozzaad' || $_SESSION['muvelet'] == 'bekuld' || $_SESSION['muvelet'] == 'uj')
                 $elemnev = 'Új ' . $this->page->cimke;
 
+            $elemnev = ucfirst($elemnev ?? '');
+            @$muvelet = ($_SESSION['muvelet']) ? self::$muveletek[$_SESSION['muvelet']] : self::$muveletek['szerkeszt'];
+
             define('SWALMIXIN', array(
-                "title" => ucfirst($elemnev) . " " . self::$muveletek[$_SESSION['muvelet']] . " $eredmeny",
+                "title" => $elemnev . " " . $muvelet . " $eredmeny",
                 "icon" => self::$icons[$_SESSION['eredmeny']] ?? "error"
                 )
             );
@@ -180,6 +183,8 @@ class Controller
     }
 
     public static function CSRFValidator() : bool {
+        if(!isset($_SESSION['csrf_token']) || !isset($_POST['csrf_token']))
+            return false;
         return hash_equals($_SESSION['csrf_token'], $_POST['csrf_token']);
     }
 
@@ -203,7 +208,8 @@ class Controller
 
     public static function POSTCleaner() : void {
         foreach($_POST as $key => $value) {
-            $value = trim($value);
+            if (!is_array($value))
+                $value = trim($value);
             $_POST[$key] = $value;
             if ($value === "NULL" || $value === "")
                 $_POST[$key] = null;

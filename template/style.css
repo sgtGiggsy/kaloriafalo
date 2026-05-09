@@ -164,6 +164,11 @@ select, input:not([type="checkbox"]) {
     width: 100%;
 }
 
+textarea, .ck-editor__editable {
+    font-family: Helvetica, Arial, sans-serif;
+    height: 30ch;
+}
+
 .kethetes {
     width: max-content;
     margin-bottom: 1em;

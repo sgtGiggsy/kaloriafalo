@@ -37,7 +37,7 @@ namespace Kaloriafalo\template;
         include("./template/footer.tpl.php");
     ?></footer>
     <div id="overlay" onclick="showMenu(false)"></div><?php
-	
-	include('./includes/scriptblock.php')
+
+    include('./Pages/views/_assets/scriptblock.php')
 ?></body>
 </html>

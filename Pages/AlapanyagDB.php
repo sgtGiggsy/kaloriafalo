@@ -16,7 +16,7 @@ class AlapanyagDB
     }
 
     public static function GetAlapanyagok() : ?array {
-        $alapanyag = new MySQLHandler("SELECT alapanyag_nev AS alapanyag, kaloria AS kalória, mertekegyseg AS mértékegység, szenhidrat AS szénhidrát, feherje AS fehérje, zsir AS zsír, IF(cukor, '*', '') AS cukor, IF(gluten, '*', '') AS glutén, IF(laktoz, '*', '') AS laktóz, slug
+        $alapanyag = new MySQLHandler("SELECT alapanyag_nev AS alapanyag, kaloria AS kalória, mertekegyseg AS mértékegység, szenhidrat AS szénhidrát, feherje AS fehérje, zsir AS zsír, IF(cukor, '*', '') AS cukor, IF(gluten, '*', '') AS glutén, IF(laktoz, '*', '') AS laktóz, slug, alapanyag_id
             FROM alapanyagok
             ORDER BY alapanyag_nev;");
         if($alapanyag->sorokszama == 0)
@@ -25,12 +25,12 @@ class AlapanyagDB
             return $alapanyag->AsArray();
     }
 
-    public static function GetAlapanyagokFuzzyList(array $needlarray) : array {
+    public static function GetAlapanyagokFuzzyList(array $needlarray, string $selected_col) : array {
         $alapanyag = new MySQLHandler();
-        $alapanyag->Prepare('SELECT alapanyag_nev AS alapanyag, slug
+        $alapanyag->Prepare('SELECT alapanyag_nev AS alapanyag, alapanyag_id
                 FROM alapanyagok
                 WHERE alapanyag_nev LIKE ?;');
-        return $alapanyag->GetFuzzyList($needlarray);
+        return $alapanyag->GetFuzzyList($needlarray, $selected_col);
     }
 
     public static function CheckIrasjog(string $slug, int $uid) : bool {

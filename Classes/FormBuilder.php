@@ -27,6 +27,21 @@ class FormBuilder
         return $this;
     }
 
+    public function TextBox(string $name, string $label, bool $required = false): self {
+        if ($required)
+            $required = 'required';
+        else
+            $required = '';
+        $this->mezok[] = [
+            'type' => 'textbox',
+            'name' => $name,
+            'label' => $label,
+            'value' => null,
+            'required' => $required
+        ];
+        return $this;
+    }
+
     public function Number(string $name, string $label, bool $float = false, bool $required = false): self {
         if ($required)
             $required = 'required';
@@ -129,6 +144,15 @@ class FormBuilder
                         htmlspecialchars((string)$mezo['value']),
                         $mezo['step'],
                         $mezo['required']
+                    );
+                    break;
+                case 'textbox':
+                    $html .= sprintf(
+                        '<textarea name="%s" id="%s" %s>%s</textarea>',
+                        $mezo['name'],
+                        $mezo['name'],
+                        $mezo['required'],
+                        htmlspecialchars((string)$mezo['value'])
                     );
                     break;
 

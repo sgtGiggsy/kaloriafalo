@@ -38,13 +38,10 @@ class Alapanyag extends Page
     ];
 
     public function Router(array $params) : Page {
-        if($this->type == 'alapanyag') {
-            if(!isset($params[0])) {
-                return new Alapanyag('alapanyagok');
-            }
-
-            if($params[0] == 'uj' && Settings::$uid) {
-                $this->type = 'uj';
+        $this->validpagemethods = ['uj', 'szerkeszt'];
+        $params = $this->ParseGet($params);
+        if($this->selectedpage == 'alapanyag') {
+            if($params['method'] == 'uj' && Settings::$uid) {
                 $this->muvelet = 'uj';
                 if($_SERVER['REQUEST_METHOD'] !== 'POST') {
                     $this->pagepath = 'alapanyag/uj';
@@ -53,36 +50,39 @@ class Alapanyag extends Page
                 }
                 return $this;
             }
-            if($params[0] == 'szerkeszt' && Settings::$admin) {
-                $this->type = 'szerkeszt';
-                $this->muvelet = 'szerkeszt';
-                return $this;
+
+            if(!isset($params['elemid'])) {
+                return new Alapanyag('alapanyagok');
             }
 
-            $alapanyag = AlapanyagDB::GetAlapanyag($params[0]);
+            if($params['method'] == 'szerkeszt') {
+                $this->muvelet = 'szerkeszt';
+                if($_SERVER['REQUEST_METHOD'] === 'POST' && Settings::$admin)
+                    return $this;
+            }
+
+            $alapanyag = AlapanyagDB::GetAlapanyag($params['elemid']);
             if(!$alapanyag) {
                 return new SinglePage('404');
             }
             else {
-                $this->irasjog = Settings::$admin ?? AlapanyagDB::CheckIrasjog($alapanyag['slug'], Settings::$uid);
+                $this->irasjog = Settings::$admin;
                 $this->alapanyag = $alapanyag;
                 $this->view = $this->views['alapanyag'];
             }
 
-            if(in_array('szerkeszt', $params)) {
+            if($params['method'] == 'szerkeszt') {
                 if(!$this->irasjog) {
                     return new SinglePage('403');
                 }
                 else {
-                    $this->type = 'szerkeszt';
-                    $this->muvelet = 'szerkeszt';
                     $this->form = $this->Form('szerkeszt', $alapanyag);
-                    $this->pagepath = 'alapanyag/'. $alapanyag['slug'] .'/szerkeszt';
+                    $this->pagepath = 'alapanyag/szerkeszt/'. $alapanyag['slug'];
                     $this->view = $this->views['szerkeszt'];
                 }
             }
         }
-        elseif($this->type == 'alapanyagok') {
+        elseif($this->selectedpage == 'alapanyagok') {
             $this->pagepath = 'alapanyagok';
             $this->view = $this->views['alapanyagok'];
             $this->alapanyag = AlapanyagDB::GetAlapanyagok();
@@ -92,33 +92,31 @@ class Alapanyag extends Page
     }
 
     public function HtmlHead() : void {
-        $this->keywords = array();
-        $this->canonical = ROOT_PATH . '/' . $this->pagepath;
-        $this->ogtype = "website";
-        $this->publishtime = null;
-        $this->shareimage = null;
-        $this->title .= ' - ' . ucfirst($this->type);
-        if ($this->type == "alapanyagok") {
+        $this->title .= ' - ' . ucfirst($this->cimke);
+        if ($this->selectedpage == "alapanyagok") {
             $this->sitedesc = "Itt található az elérhető alapanyagok listája";
-        } elseif ($this->type == "uj") {
-            $this->title .= ' - Új felvitele';
-            $this->sitedesc = "Új alapanyag felvitele";
-        } elseif ($this->type == "alapanyag") {
-            $this->title .= ' - ' . ucfirst($this->alapanyag['alapanyag_nev']);
-            $this->sitedesc = "Az alapanyag adatlapja és a hozzá tartozó receptek listája";
-        } elseif ($this->type == "szerkeszt") {
-            $this->title .= ': ' . ucfirst($this->alapanyag['alapanyag_nev']);
-            $this->sitedesc = "Az alapanyag szerkesztése";
+        } elseif ($this->selectedpage == "alapanyag") {
+            if ($this->muvelet == "uj") {
+                $this->title .= ' - Új felvitele';
+                $this->sitedesc = "Új alapanyag felvitele";
+            } elseif ($this->muvelet == "szerkeszt") {
+                $this->title .= ': ' . ucfirst($this->alapanyag['alapanyag_nev']);
+                $this->sitedesc = "Az alapanyag szerkesztése";
+            }
+            else {
+                $this->title .= ' - ' . ucfirst($this->alapanyag['alapanyag_nev']);
+                $this->sitedesc = "Az alapanyag adatlapja és a hozzá tartozó receptek listája";
+            }
         }
         $this->ablakcim = $this->title;
-        include(ROOT_DIR . "/includes/htmlheader.inc.php");
+        include(__DIR__ . "/views/_assets/htmlheader.php");
     }
 
     public function Post() : bool {
         @$cukor = (int) $_POST['cukor'] ?? null;
         @$gluten = (int) $_POST['gluten'] ?? null;
         @$laktoz  = (int) $_POST['laktoz'] ?? null;
-        $fname = ucfirst($this->type);
+        $fname = ucfirst($this->muvelet);
         return $this->$fname($cukor, $gluten, $laktoz);
     }
 
@@ -128,7 +126,7 @@ class Alapanyag extends Page
 
         $searcharr = Helpers::FuzzySearchStringGen($alapanyag_nev);
 
-        $firstpass = AlapanyagDB::GetAlapanyagokFuzzyList($searcharr);
+        $firstpass = AlapanyagDB::GetAlapanyagokFuzzyList($searcharr, 'alapanyag_id');
         if(count($firstpass) == 0)
             return [];
 
@@ -138,7 +136,6 @@ class Alapanyag extends Page
     protected function Uj (int $cukor, int $gluten, int $laktoz) : bool
     {
         if(Settings::$uid) {
-
             $slug = Helpers::SlugGenerator($_POST['alapanyag_nev']);
             $slug = Helpers::SlugVerifier($slug, [AlapanyagDB::class, 'GetAlapanyag']);
             $eredmeny = AlapanyagDB::UjAlapanyag($_POST['alapanyag_nev'], $slug, $_POST['kaloria'], $_POST['szenhidrat'] ?? null, $_POST['feherje'] ?? null, $_POST['zsir'] ?? null, $_POST['mertekegyseg'], Settings::$uid, $cukor, $gluten, $laktoz);

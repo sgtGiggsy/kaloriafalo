@@ -1,35 +1,38 @@
 <?php
 use Kaloriafalo\Classes\Settings;
 
+echo "\n";
 ?><script type="text/javascript" nonce="<?=Settings::$nonce?>">
 	const policy = trustedTypes.createPolicy('default', {
 		createHTML: (input) => input
 	});
-    const urlParams = new URLSearchParams(window.location.search);
-    <?php foreach(Settings::$PHPvarsToJS as $key => $value)
+    const urlParams = new URLSearchParams(window.location.search);<?php echo "\n";
+    foreach(Settings::$PHPvarsToJS as $key => $value)
     {
 		if(is_array($value))
 		{
-			?>const <?=$key?> = [<?php
 			$cval = count($value);
-			for($i = 0; $i < $cval; $i++)
-			{
-				echo '"' . $value[$i] . '"';
-				if($i < $cval - 1)
-				echo ', ';
-			}
-			?>] <?php
+            echo "const $key = [";
+            for($i = 0; $i < $cval; $i++) {
+                echo "'" . $value[$i] . "'";
+                if($i < $cval - 1) {
+                    echo ",\n";
+                }
+                else
+                    echo "\n";
+            }
+            echo "]";
 		}	
 		else
 		{
-			?>const <?=$key?> = '<?=$value?>'; <?php
+            echo "\tconst $key = '$value';\n";
 		}
 
     }
-?></script><?php
+?></script><?php echo "\n";
 foreach(Settings::$jsfiles as $js)
 {
-	?><script src="<?=$RootPath?>/<?=$js?>"></script><?php
+	echo "<script src='$RootPath/$js'></script>\n";
 }
 
 if(isset($swaltoaster))

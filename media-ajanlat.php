@@ -1,15 +1,11 @@
 <?php
 function HtmlHead(&$keywords, &$canonical, &$title, &$ogtype, &$publishtime, &$shareimage, &$robots, &$ablakcim, &$sitedesc, &$cimke) : void
 {
-    $keywords = array();
-    $canonical = ROOT_PATH . "/media-ajanlat";
     $title .= " - Média ajánlat";
     $ogtype = "website";
-    $publishtime = null;
     $ablakcim = $title;
     $sitedesc = "A KalóriaFaló média ajánlata";
     $cimke = "media-ajanlat";
-    $shareimage = null;
 }
 
 function Render() : void {

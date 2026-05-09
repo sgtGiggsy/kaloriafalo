@@ -1,4 +1,30 @@
+var iter = iterator;
 document.querySelectorAll('.autocomplete').forEach(createAutocomplete);
+function parseInput(value) {
+    const match = value.match(/^(\d+\s*[a-zA-Z]+)\s*(.*)$/);
+
+    if (!match) {
+        return {
+            prefix: '',
+            query: value
+        };
+    }
+
+    return {
+        prefix: match[1], // pl: "20 dkg"
+        query: match[2]   // pl: "csirkemell"
+    };
+}
+
+function selectItem(itemName, prefix) {
+    input.value = prefix
+        ? prefix + ' ' + itemName
+        : itemName;
+}
+
+function normalizePrefix(prefix) {
+    return prefix.replace(/(\d+)([a-zA-Z]+)/, '$1 $2');
+}
 
 function createAutocomplete(input) {
     // API meghívása ha a felhasználó megáll a bevitellel egy pillanatra
@@ -6,17 +32,16 @@ function createAutocomplete(input) {
         clearTimeout(debounceTimer);
 
         debounceTimer = setTimeout(async () => {
-            const val = input.value.trim();
+            //const val = input.value.trim();
+            const { prefix, query } = parseInput(input.value.trim());
+            mennyimertek = normalizePrefix(prefix);
 
-            if(!val) {
-                dropdown.innerHTML = '';
-                return;
-            }
+            if (query.length < 2) return;
 
             if(controller) controller.abort();
             controller = new AbortController();
 
-            const res = await fetch(RootPath + `/api/alapanyag/kereses/${encodeURIComponent(val)}`, {
+            const res = await fetch(RootPath + `/api/alapanyag/kereses/${encodeURIComponent(query)}`, {
                 signal: controller.signal
             });
 
@@ -65,7 +90,7 @@ function createAutocomplete(input) {
 
         tippek.forEach((item, i) => {
             const div = document.createElement('div');
-            div.textContent = item.alapanyag;
+            div.textContent = mennyimertek + " " + item.alapanyag;
 
             if (i === activeIndex) div.classList.add('active');
 
@@ -80,8 +105,9 @@ function createAutocomplete(input) {
 
     // Elem kiválasztása
     function select(item) {
-        input.value = item.alapanyag;
+        input.value = mennyimertek + " " + item.alapanyag;
         hidden.value = item.alapanyag_id;
+        mennyiseg.value = mennyimertek;
 
         dropdown.innerHTML = '';
 
@@ -90,6 +116,7 @@ function createAutocomplete(input) {
 
     // Következő mezőre ugrás
     function addNextRow() {
+        iter++;
         const container = document.getElementById('alapanyagok');
 
         const row = document.createElement('div');
@@ -101,10 +128,15 @@ function createAutocomplete(input) {
 
         const hidden = document.createElement('input');
         hidden.type = 'hidden';
-        hidden.name = 'alapanyagok[]';
+        hidden.name = 'alapanyagok[' + iter + '][alapanyag]';
+
+        const mennyiseg = document.createElement('input');
+        mennyiseg.type = 'hidden';
+        mennyiseg.name = 'alapanyagok[' + iter + '][mennyiseg]';
 
         row.appendChild(input);
         row.appendChild(hidden);
+        row.appendChild(mennyiseg);
 
         container.appendChild(row);
 
@@ -122,6 +154,7 @@ function createAutocomplete(input) {
                 row.remove();
                 const prevInput = prevRow.querySelector('.autocomplete');
                 prevInput.focus();
+                iter--;
             }
         }
     }
@@ -139,9 +172,11 @@ function createAutocomplete(input) {
     let activeIndex = -1;
     let controller = null;
     let debounceTimer = null;
+    var mennyimertek;
 
     const row = input.closest('.alapanyag-sor');
-    const hidden = row.querySelector('input[type="hidden"]');
+    const hidden = row.querySelector('[name="alapanyagok[' + iter + '][alapanyag]"]');
+    const mennyiseg = row.querySelector('[name="alapanyagok[' + iter + '][mennyiseg]"]');
 
     const dropdown = document.createElement('div');
     dropdown.classList.add('autocomplete-list');

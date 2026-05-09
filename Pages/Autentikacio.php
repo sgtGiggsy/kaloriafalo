@@ -26,12 +26,14 @@ class Autentikacio extends Page
     ];
 
     public function Router(array $params) : Page {
+        //$this->validpagemethods = ['megerosit', 'sikeres', 'sikertelen'];
+        //$params = $this->ParseGet($params);
         $megerositokod = null;
         if(in_array('megerosit', $params)) {
             $key = array_search('megerosit', $params);
             if(isset($params[$key + 1])) {
                 $megerositokod = $params[$key + 1];
-                if($this->type == 'regisztracio') {
+                if($this->selectedpage == 'regisztracio') {
                     $this->megerosit = $this->UserMegerosit($megerositokod);
                 }
                 else
@@ -41,7 +43,7 @@ class Autentikacio extends Page
                 return $this;
         }
 
-        if($this->type == 'regisztracio') {
+        if($this->selectedpage == 'regisztracio') {
             if(in_array('sikeres', $params))
                 $this->view = __DIR__ . "/views/autentikacio/" . $this->views['sikeresreg'];
             elseif(in_array('sikertelen', $params))
@@ -51,7 +53,7 @@ class Autentikacio extends Page
             }
         }
 
-        if($this->type == 'elfelejtettjelszo') {
+        if($this->selectedpage == 'elfelejtettjelszo') {
             if(in_array('megerosit', $params))
                 $this->view = __DIR__ . "/views/autentikacio/" . $this->views['ujjelszo'];
             elseif(in_array('sikeres', $params))
@@ -62,29 +64,25 @@ class Autentikacio extends Page
     }
 
     public function HtmlHead() : void {
-        $this->keywords = array();
-        $this->canonical = ROOT_PATH . '/' . $this->type;
-        $this->ogtype = "website";
-        $this->publishtime = null;
+        $this->canonical = ROOT_PATH . '/' . $this->selectedpage;
         $this->robots = '<meta name="robots" content="noindex, nofollow">';
-        $this->shareimage = null;
-        if($this->type == "belepes") {
+        if($this->selectedpage == "belepes") {
             $this->title .= " - Bejelentkezés";
             $this->sitedesc = "Jelentkezz be a további tartalmak eléréséhez.";
             $this->cimke = "bejelentkezés";
         }
-        elseif($this->type == "regisztracio") {
+        elseif($this->selectedpage == "regisztracio") {
             $this->title .= " - Regisztráció";
             $this->sitedesc = "Regisztrálj, hogy saját tartalommal bővíthesd az oldalt!";
             $this->cimke = "regisztráció";
         }
-        elseif($this->type == "jelszoemlekezteto") {
+        elseif($this->selectedpage == "jelszoemlekezteto") {
             $this->title .= " - Jelszóemlékeztető";
             $this->sitedesc = "Elfelejtett jelszó";
             $this->cimke = "jelszóemlékeztető";
         }
         $this->ablakcim = $this->title;
-        include(ROOT_DIR . "/includes/htmlheader.inc.php");
+        include(__DIR__ . "/views/_assets/htmlheader.php");
     }
 
     private function Belepes() : bool {
@@ -121,7 +119,7 @@ class Autentikacio extends Page
                     $password = $loginhandler['jelszo'];
                     if ($password && password_verify($_POST['jelszo'], $password))
                     {
-                        if($this->type == "belepes")
+                        if($this->selectedpage == "belepes")
                             $this->redirtarget = ROOT_PATH;
                         //unset($_SESSION);
                         $_SESSION['useragent'] = $_SERVER['HTTP_USER_AGENT'] ?? '';

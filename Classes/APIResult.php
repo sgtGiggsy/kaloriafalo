@@ -8,11 +8,16 @@ use Kaloriafalo\Pages\Page;
  * API az oldalon belüli AJAX kérések lebonyolítására.
  *
  * Nincs API kulcs, vagy bármi egyéb authorizáció a felhasználó session-jén kívül!!!
- * A meghívható metódusokat a meghívott Page (vagy leszármazottja) objektum $apimethods határozza meg.
+ * A meghívható metódusokat a meghívott Page (vagyis jelenleg csak a leszármazottja) objektum $apimethods attribútuma
+ * határozza meg.
  * Van fallback metódushívás is, az a betöltésre kiválasztott oldal nevével egyező metódust keres.
  * A fallback metódus csak akkor van használatban, ha az $apimethods-ban SEMMI nem lett meghatározva.
  *
  * Kimenet: szabványos JSON
+ *
+ * Működés: Az osztály intéz minden előzetes ellenőrzést. A meghívott osztálytól egy szimpla
+ * array-t vár válaszként. Ha az osztálynál valami miatt mégis elhasalt a hívás, akkor a visszaadott
+ * array-ben lennie kell "message" és "status" kulcsoknak.
  */
 class APIResult
 {
@@ -48,7 +53,6 @@ class APIResult
 
         $this->hivas = [$page, $method];
 
-
         return $this;
     }
 
@@ -67,6 +71,7 @@ class APIResult
             }
             Controller::POSTCleaner();
         }
+
         if(!is_callable($hivas)) {
             $this->message = 'A kiválasztott metódus nem érhető el';
             $this->status = 405;
@@ -101,9 +106,9 @@ class APIResult
 
         $page = Controller::PageSelect($request['page']);
         // Van kiválasztott oldal, de nem létezik, vagy tiltott az elérése
-        if($page->type == '404' || $page->type == '403') {
+        if($page->selectedpage == '404' || $page->selectedpage == '403') {
             $this->message = 'A kért oldal nem érhető el a számodra';
-            $this->status = (int)$page->type;
+            $this->status = (int)$page->selectedpage;
             return false;
         }
 
@@ -162,8 +167,10 @@ class APIResult
     }
 
     public function Render() : bool {
-        header('Content-Type: application/json');
-        http_response_code($this->status);
+        if(isset($this->data['status']))
+            $this->status = $this->data['status'];
+        if(isset($this->data['message']))
+            $this->message = $this->data['message'];
 
         $response = [];
         $response['success'] = $this->status == 200;
@@ -178,6 +185,9 @@ class APIResult
         }
 
         Logging::LogApiCall();
+
+        header('Content-Type: application/json');
+        http_response_code($this->status);
         echo json_encode($response, JSON_UNESCAPED_UNICODE);
         exit;
     }

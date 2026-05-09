@@ -15,4 +15,5 @@ if($this->shareimage) {
 ?><meta property="og:url" content="<?=$this->canonical?>" />
 <meta property="og:site_name" content="<?=$this->ablakcim?>" />
 <meta property="og:description" content="<?=$this->sitedesc?>" />
+<?= $this->localcss ?>
 <?= $this->robots ?>

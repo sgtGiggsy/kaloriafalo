@@ -1,15 +1,10 @@
 <?php
 function HtmlHead(&$keywords, &$canonical, &$title, &$ogtype, &$publishtime, &$shareimage, &$robots, &$ablakcim, &$sitedesc, &$cimke) : void
 {
-    $keywords = array();
-    $canonical = ROOT_PATH . "/kapcsolat";
     $title .= " - Kapcsolat";
-    $ogtype = "website";
-    $publishtime = null;
     $ablakcim = $title;
     $sitedesc = "A Kalóriafaló kapcsolati adatlapja";
     $cimke = "kapcsolat";
-    $shareimage = null;
 }
 
 function Render() : void {

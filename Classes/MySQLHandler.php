@@ -25,6 +25,8 @@ class MySQLHandler
     private array $params = array();
     private ?float $queryruntime = null;
 
+    private bool $transaction = false;
+
     public function __construct(string | null $query = null, ...$params)
 	{
         if(isset($GLOBALS['felhasznaloid']) && $GLOBALS['felhasznaloid'] == 1)
@@ -115,6 +117,32 @@ class MySQLHandler
         else
         {
             echo "<h2>A MySQL lekérdezésbe valamilyen hiba csúszott!</h2>";
+        }
+    }
+
+    public function StartTransaction()
+    {
+        if($this->con)
+        {
+            $this->transaction = true;
+            mysqli_begin_transaction($this->con);
+            $this->stmt = $this->con->stmt_init();
+        }
+    }
+
+    public function Commit()
+    {
+        if($this->con && $this->transaction)
+        {
+            mysqli_commit($this->con);
+        }
+    }
+
+    public function Rollback()
+    {
+        if($this->con && $this->transaction)
+        {
+            mysqli_rollback($this->con);
         }
     }
 
@@ -434,13 +462,13 @@ class MySQLHandler
         }
     }
 
-    public function GetFuzzyList(array $needlarray) : array {
+    public function GetFuzzyList(array $needlarray, string $column_name) : array {
         $finalarray = array();
         $this->keepalive = true;
         foreach ($needlarray as $needle) {
             $this->Run($needle);
             foreach ($this->AsArray() as $row) {
-                $finalarray[$row['slug']] = $row;
+                $finalarray[$row[$column_name]] = $row;
             }
         }
         return $finalarray;

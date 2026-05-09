@@ -1,15 +1,10 @@
 <?php
 function HtmlHead(&$keywords, &$canonical, &$title, &$ogtype, &$publishtime, &$shareimage, &$robots, &$ablakcim, &$sitedesc, &$cimke) : void
 {
-    $keywords = array();
-    $canonical = ROOT_PATH . "/adatkezelesi-tajekoztato";
     $title .= " - Adatkezelési tájékoztató";
-    $ogtype = "website";
-    $publishtime = null;
     $ablakcim = $title;
     $sitedesc = "A Kalóriafaló adatkezelési tájékoztatója";
     $cimke = "adatkezelesi-tajekoztato";
-    $shareimage = null;
 }
 
 function Render() : void {

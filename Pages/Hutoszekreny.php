@@ -7,16 +7,13 @@ use Kaloriafalo\Classes\Settings;
 
 class Hutoszekreny extends Page
 {
-    public string $cimke = "hutoszekreny";
-
-    public array $apiresponse = [];
+    public string $cimke = "hűtőszekrény";
     public array $apimethods = [
         'GET' => ['tartalom' => 'SajatHuto'],
         'POST' => ['ujtetel' => 'UjTetel']
     ];
     protected ?array $hutoszekreny = null;
     protected string $viewsgyoker = __DIR__ . "/views/hutoszekreny/";
-    protected bool $irasjog = false;
     protected array $jsfiles = ['Pages/views/hutoszekreny/assets/listautocomplete.js'];
     protected FormBuilder $form;
     protected array $views = [
@@ -26,34 +23,51 @@ class Hutoszekreny extends Page
     ];
 
     public function Router(array $params) : Page {
-        if($this->type == 'hutoszekreny') {
-            $sajathuto = !Settings::$admin || (Settings::$admin && !isset($params[0])) || (Settings::$admin && $params[0] == 'szerkeszt');
+        $this->validpagemethods = ['szerkeszt', 'tartalomszerkeszt'];
+        $params = $this->ParseGet($params);
+        if($this->selectedpage == 'hutoszekreny') {
+            $sajathuto = !Settings::$admin || (Settings::$admin && !$params['elemid']);
+
             if($sajathuto) {
                 $this->hutoszekreny = $this->SajatHuto();
                 $this->irasjog = true;
-                if(isset($params[0]) && $params[0] == 'szerkeszt') {
+
+                if($params['method'] == 'szerkeszt') {
+                    $this->muvelet = 'szerkeszt';
                     $this->HutoSzerkeszt();
+                }
+                elseif($params['method'] == 'tartalomszerkeszt') {
+                    $this->muvelet = 'tartalomszerkeszt';
                 }
                 return $this;
             }
 
-            if(isset($params[0]) && $params[0] != 'szerkeszt')
-                $this->hutoszekreny = HutoszekrenyDB::GetHutoszekrenyById($params[0]);
-
-            if(!$this->hutoszekreny) {
+            if(!$params['elemid'])
                 return new SinglePage("404");
-            }
-            elseif(in_array('szerkeszt', $params)) {
-                $this->irasjog = true;
+
+            if(!is_numeric($params['elemid']))
+                return new SinglePage("404");
+
+            if(!$this->Getolvasasjog($params['elemid']))
+                return new SinglePage("403");
+
+            $this->hutoszekreny = $this->HutoszekrenyById($params['elemid']);
+            if(!$this->hutoszekreny)
+                return new SinglePage("404");
+
+            $this->irasjog = true;
+            if($params['method'] == 'szerkeszt') {
+                $this->muvelet = 'szerkeszt';
                 $this->HutoSzerkeszt();
-                return $this;
             }
-            else {
-                $this->irasjog = true;
-                return $this;
+
+            if($params['method'] == 'tartalomszerkeszt') {
+                $this->muvelet = 'tartalomszerkeszt';
             }
+
+            return $this;
         }
-        elseif($this->type == 'hutoszekrenyek' && Settings::$admin) {
+        elseif($this->selectedpage == 'hutoszekrenyek' && Settings::$admin) {
             $this->irasjog = true;
             $this->Hutoszkerenylista();
             return $this;
@@ -63,27 +77,41 @@ class Hutoszekreny extends Page
     }
 
     public function HtmlHead() : void {
-        $this->keywords = array();
-        $this->canonical = ROOT_PATH . '/' . $this->pagepath;
-        $this->ogtype = "website";
-        $this->publishtime = null;
-        $this->shareimage = null;
-        if ($this->type == "hutoszekrenyek") {
+        if ($this->selectedpage == "hutoszekrenyek") {
             $this->title .= " - Hűtőszekrények";
             $this->sitedesc = "Itt találhatóak a felhasználók hűtőszekrényei";
-        } elseif ($this->type == "hutoszekreny") {
+        } elseif ($this->selectedpage == "hutoszekreny") {
             $this->title .= ' - Hűtőszekrény';
             $this->sitedesc = "Felhasználói hűtőszekrény";
-        } elseif ($this->type == "szerkeszt") {
+        } elseif ($this->selectedpage == "szerkeszt") {
             $this->title .= " - Hűtőszekrény szerkesztése";
             $this->sitedesc = "Hűtőszekrény szerkesztése";
         }
         $this->ablakcim = $this->title;
-        include(ROOT_DIR . "/includes/htmlheader.inc.php");
+        include(__DIR__ . "/views/_assets/htmlheader.php");
     }
 
-    protected function Szerkeszt() {
+    protected function Szerkeszt() : bool {
+        if(!isset($_POST['huto_id']) || !$this->GetIrasjog($_POST['huto_id']))
+            return false;
+        $eredmeny = HutoszekrenyDB::Szerkeszt($_POST['huto_id'], $_POST['huto_nev'] ?? null);
+        if($eredmeny)
+            $this->redirtarget = ROOT_PATH . '/hutoszekreny/' . $_POST['huto_id'];
+        return $eredmeny;
+    }
 
+    protected function Tartalomszerkeszt() : bool {
+        if(!isset($_POST['huto_id']) || !$this->GetIrasjog($_POST['huto_id']))
+            return false;
+
+        $eredmeny = HutoszekrenyDB::TartalomSzerkeszt($_POST['huto_id'], $_POST['alapanyagok'] ?? null);
+        if($eredmeny) {
+            $this->redirtarget = ROOT_PATH . '/hutoszekreny/' . $_POST['huto_id'];
+            $this->mixintext = 'A hűtőszekrény tartalmának frissítése sikeres';
+        }
+        else
+            $this->mixintext = 'A hűtőszekrény tartalmának frissítése hibába ütközött';
+        return $eredmeny;
     }
 
     protected function Form(string $type, ?array $hutoszekreny = null) : FormBuilder {
@@ -100,12 +128,17 @@ class Hutoszekreny extends Page
     public function SajatHuto() : array {
         return HutoszekrenyDB::GetHutoszekrenyByUser(Settings::$uid);
     }
+
+    private function HutoszekrenyById(int $huto_id) : array {
+        return HutoszekrenyDB::GetHutoszekrenyById($huto_id);
+    }
+
     private function HutoSzerkeszt() : void {
-        $this->type = 'szerkeszt';
+        $this->hutoszekreny = $this->hutoszekreny['huto'];
         $this->muvelet = 'szerkeszt';
         if($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->form = $this->Form('szerkeszt', $this->hutoszekreny);
-            $this->pagepath = 'hutoszekreny/'. $this->hutoszekreny['huto_id'] .'/szerkeszt';
+            $this->pagepath = 'hutoszekreny/szerkeszt/' . $this->hutoszekreny['huto_id'];
             $this->view = $this->views['szerkeszt'];
         }
     }
@@ -116,21 +149,26 @@ class Hutoszekreny extends Page
         $this->hutoszekreny = HutoszekrenyDB::GetHutoszekrenyek();
     }
 
-    public function GetIrasjog(int|string $huto_id) : bool {
+    public function GetIrasjog(int|string|null|bool $elem_id) : bool {
+        if(!$elem_id)
+            return false;
         if(Settings::$admin)
             return true;
 
-        return HutoszekrenyDB::GetHutoIrasjog(Settings::$uid, $huto_id);
+        return HutoszekrenyDB::GetHutoIrasjog(Settings::$uid, $elem_id);
     }
 
-    public function GetOlvasasjog(int|string $huto_id) : bool {
+    public function GetOlvasasjog(int|string|null|bool $elem_id) : bool {
+        if(!$elem_id)
+            return false;
+
         if(Settings::$admin)
             return true;
 
-        return HutoszekrenyDB::GetHutoIrasjog(Settings::$uid, $huto_id);
+        return HutoszekrenyDB::GetHutoIrasjog(Settings::$uid, $elem_id);
     }
 
-    public function Hutoszekreny(int|string|null $identifier = null, ) : ?array {
+    public function Hutoszekreny(int|string|null $identifier = null) : ?array {
         if($identifier === null)
             return null;
 

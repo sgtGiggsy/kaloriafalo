@@ -1,15 +1,10 @@
 <?php
 function HtmlHead(&$keywords, &$canonical, &$title, &$ogtype, &$publishtime, &$shareimage, &$robots, &$ablakcim, &$sitedesc, &$cimke)
 {
-    $keywords = array();
-    $canonical = ROOT_PATH . "/security";
     $title .= " - Biztonsági irányelvek (Security Policy)";
-    $ogtype = "website";
-    $publishtime = null;
     $ablakcim = $title;
     $sitedesc = "A Kalóriafaló biztonsági irányelvei";
     $cimke = "security";
-    $shareimage = null;
 }
 
 function Render() {

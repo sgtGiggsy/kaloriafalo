@@ -2,8 +2,6 @@
 
 namespace Kaloriafalo\Classes;
 
-use Kaloriafalo\Pages\AlapanyagDB;
-
 class Helpers
 {
     public static function TimeStampToDate(int $timestamp) {
@@ -267,6 +265,18 @@ class Helpers
         }
 
         return [$basestring . "%", "%" . $basestring . "%" , $needle, ...$needle2];
+    }
+
+    public static function NeveloHatarozo(?string $szo) {
+        if(!$szo)
+            return null;
+
+        $nevelo = "a";
+        $elsokarakter = preg_split('//u', $szo, -1, PREG_SPLIT_NO_EMPTY)[0];
+        $massalhangzok = 'bcdfghjklmnpqrstvwxz';
+        if(!str_contains($massalhangzok, $elsokarakter))
+            $nevelo .= 'z';
+        return $nevelo . ' ' . $szo;
     }
 
     function MultiSelectDropdown(array $elements, array $selected, string $selectnev, string $label, ?int $selectid = null) {

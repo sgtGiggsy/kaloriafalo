@@ -1,15 +1,10 @@
 <?php
 function HtmlHead(&$keywords, &$canonical, &$title, &$ogtype, &$publishtime, &$shareimage, &$robots, &$ablakcim, &$sitedesc, &$cimke) : void
 {
-    $keywords = array();
-    $canonical = ROOT_PATH . "/impresszum";
     $title .= " - Impresszum";
-    $ogtype = "website";
-    $publishtime = null;
     $ablakcim = $title;
     $sitedesc = "A KalóriaFaló impresszuma";
     $cimke = "impresszum";
-    $shareimage = null;
 }
 
 function Render() : void {

@@ -117,7 +117,7 @@ else
 
 // Alap script fájlok hozzáadása
 Settings::$jsfiles[] = "includes/external/sweetalert/sweetalert2.all.min.js";
-Settings::$jsfiles[] = "includes/js/sitefunctions.js";
+Settings::$jsfiles[] = "Pages/views/_assets/js/sitefunctions.js";
 Settings::$PHPvarsToJS['nonce'] = $nonce;
 Settings::$PHPvarsToJS['RootPath'] = $RootPath;
 

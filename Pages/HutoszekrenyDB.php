@@ -11,19 +11,26 @@ class HutoszekrenyDB
         return $ujhuto->siker;
     }
 
+    private static function GetHutoTartalomHelper(int $huto_id) : array {
+        $tartalom = new MySQLHandler("SELECT alapanyag_nev AS alapanyag, alapanyagok.alapanyag_id AS alapanyag_id
+            FROM hutoszekreny_tartalmak
+                INNER JOIN alapanyagok ON hutoszekreny_tartalmak.alapanyag_id = alapanyagok.alapanyag_id
+            WHERE huto_id = ?;", $huto_id);
+        return $tartalom->AsArray();
+    }
+
     public static function GetHutoszekrenyByUser(int $felhasznalo_id) : array {
         $huto = new MySQLHandler("SELECT * FROM hutoszekrenyek WHERE felhasznalo_id = ?;", $felhasznalo_id);
         $huto = $huto->AsArray()[0];
-        $alapanyagok = new MySQLHandler("SELECT alapanyag_nev AS alapanyag, alapanyagok.slug
-            FROM hutoszekreny_tartalmak
-                INNER JOIN alapanyagok ON hutoszekreny_tartalmak.alapanyag_id = alapanyagok.alapanyag_id
-            WHERE huto_id = ?;", $huto['huto_id']);
-        return ['huto' => $huto, 'tartalom' => $alapanyagok->AsArray()];
+        $tartalom = self::GetHutoTartalomHelper($huto['huto_id']);
+        return ['huto' => $huto, 'tartalom' => $tartalom];
     }
 
     public static function GetHutoszekrenyById(int $hutoszekreny_id) : array {
         $huto = new MySQLHandler("SELECT * FROM hutoszekrenyek WHERE huto_id = ?;", $hutoszekreny_id);
-        return $huto->AsArray()[0];
+        $huto = $huto->AsArray()[0];
+        $tartalom = self::GetHutoTartalomHelper($huto['huto_id']);
+        return ['huto' => $huto, 'tartalom' => $tartalom];
     }
 
     public static function GetHutoszekrenyByNev(int $hutoszekreny_id) : array {
@@ -45,5 +52,38 @@ class HutoszekrenyDB
             return false;
         else
             return true;
+    }
+
+    public static function Szerkeszt(int $huto_id, ?string $huto_nev) : bool {
+        $szerkeszt = new MySQLHandler("UPDATE hutoszekrenyek SET huto_nev = ? WHERE huto_id = ?;", $huto_nev, $huto_id);
+        return $szerkeszt->siker;
+    }
+
+    public static function TartalomSzerkeszt(int $huto_id, ?array $alapanyagok = null) : bool {
+        $szerkeszt = new MySQLHandler();
+        $szerkeszt->StartTransaction();
+        $szerkeszt->Prepare("DELETE FROM hutoszekreny_tartalmak WHERE huto_id = ?;");
+        $szerkeszt->Run($huto_id);
+        $allapot = $szerkeszt->siker;
+        $alapanyagok = array_filter($alapanyagok);
+        $alapanyagszam = count($alapanyagok);
+        if($alapanyagok && $allapot) {
+            $prep = str_repeat('(?, ?),', $alapanyagszam - 1) . '(?, ?)';
+            $szerkeszt->Prepare("INSERT INTO hutoszekreny_tartalmak (huto_id, alapanyag_id) VALUES " . $prep . ";");
+            $alapanyagadatsorok = [];
+            foreach($alapanyagok as $alapanyag) {
+                $alapanyagadatsorok[] = $huto_id;
+                $alapanyagadatsorok[] = $alapanyag;
+            }
+            $szerkeszt->Run(...$alapanyagadatsorok);
+            $allapot = $szerkeszt->siker;
+            $szerkeszt->ShowQueryDetails();
+        }
+        if($allapot)
+            $szerkeszt->Commit();
+        else
+            $szerkeszt->Rollback();
+
+        return $allapot;
     }
 }
