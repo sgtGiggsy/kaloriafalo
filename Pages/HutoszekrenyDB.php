@@ -16,12 +16,12 @@ class HutoszekrenyDB
             FROM hutoszekreny_tartalmak
                 INNER JOIN alapanyagok ON hutoszekreny_tartalmak.alapanyag_id = alapanyagok.alapanyag_id
             WHERE huto_id = ?;", $huto_id);
-        return $tartalom->AsArray();
+        return $tartalom->EscapedArray();
     }
 
     public static function GetHutoszekrenyByUser(int $felhasznalo_id) : array {
         $huto = new MySQLHandler("SELECT * FROM hutoszekrenyek WHERE felhasznalo_id = ?;", $felhasznalo_id);
-        $huto = $huto->AsArray()[0];
+        $huto = $huto->EscapedArray()[0];
         $tartalom = self::GetHutoTartalomHelper($huto['huto_id']);
         return ['huto' => $huto, 'tartalom' => $tartalom];
     }
@@ -35,7 +35,7 @@ class HutoszekrenyDB
 
     public static function GetHutoszekrenyByNev(int $hutoszekreny_id) : array {
         $huto = new MySQLHandler("SELECT * FROM hutoszekrenyek WHERE huto_nev = ?;", $hutoszekreny_id);
-        return $huto->AsArray()[0];
+        return $huto->EscapedArray()[0];
     }
 
     public static function GetHutoszekrenyek() : array {
@@ -43,7 +43,7 @@ class HutoszekrenyDB
             FROM hutoszekrenyek
                 INNER JOIN felhasznalok ON hutoszekrenyek.felhasznalo_id = felhasznalok.felhasznalo_id
             ORDER BY felhasznalok.usernev;");
-        return $hutok->AsArray();
+        return $hutok->EscapedArray();
     }
 
     public static function GetHutoIrasjog(int $felhasznalo_id, int $huto_id) : bool {

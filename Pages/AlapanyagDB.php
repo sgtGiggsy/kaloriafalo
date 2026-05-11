@@ -12,7 +12,7 @@ class AlapanyagDB
         if($alapanyag->sorokszama == 0)
             return null;
         else
-            return $alapanyag->AsArray()[0];
+            return $alapanyag->EscapedArray()[0];
     }
 
     public static function GetAlapanyagok() : ?array {
@@ -22,7 +22,7 @@ class AlapanyagDB
         if($alapanyag->sorokszama == 0)
             return null;
         else
-            return $alapanyag->AsArray();
+            return $alapanyag->EscapedArray();
     }
 
     public static function GetAlapanyagokFuzzyList(array $needlarray, string $selected_col) : array {
