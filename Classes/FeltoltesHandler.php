@@ -1,13 +1,11 @@
 <?php
 
 namespace Kaloriafalo\Classes;
-use Kaloriafalo\Classes\MySQLHandler;
 
 class FeltoltesHandler
 {
     private array $mediatypes;
-    private string $gyokermappa;
-    private string $egyedimappa;
+    private bool $eleresiut = false;
     private string $tipus;
     private int $uid;
     private MySQLHandler $sql;
@@ -19,16 +17,12 @@ class FeltoltesHandler
         $this->sql->Prepare("INSERT INTO feltoltesek (fajl, felhasznalo_id, tipus) VALUES (?, ?, ?)");
         $this->sql->StartTransaction();
         $this->uid = $uid;
-        $this->gyokermappa = $gyokermappa;
-        $this->egyedimappa = $egyedimappa;
+        $this->eleresiut = $this->SetPath($gyokermappa, $egyedimappa);
         $this->tipus = $tipus;
     }
-    public  function Feltoltes($fajlok) : array {
+    public  function Feltoltes($fajlok) : array|bool {
+        $masoltfajlok = array(); $hibalista = array(); $uploadids = array();
         $sikeresfeltoltes = false;
-        $feltoltesimappa = $this->gyokermappa . '/' . $this->egyedimappa . '/';
-        $masoltfajlok = array();
-        $hibalista = array();
-        $uploadids = array();
 
         $fajlok = $this->FajlTombNormalizalas($fajlok);
 
@@ -37,16 +31,11 @@ class FeltoltesHandler
             $hibalista[] = $fajlvalidate['hiba'];
 
             if($fajlvalidate['eredmeny'] === true) {
-                if(!file_exists($feltoltesimappa))
-                {
-                    mkdir($feltoltesimappa, 0755, true);
-                }
-
                 $ext = strtolower(pathinfo($fajl['name'], PATHINFO_EXTENSION));
                 $name = strtolower(preg_replace('/[^a-zA-Z0-9_-]/', '_', pathinfo($fajl['name'], PATHINFO_FILENAME)));
                 $ujfajlnev = $name . bin2hex(random_bytes(8)) . '.' . $ext;
 
-                $finalfile = $feltoltesimappa . $ujfajlnev;
+                $finalfile = $this->eleresiut . $ujfajlnev;
                 try {
                     move_uploaded_file($fajl['tmp_name'], $finalfile);
                 }
@@ -101,6 +90,26 @@ class FeltoltesHandler
         return $result;
     }
 
+    private function SetPath(string $gyokermappa, string $egyedimappa) : string|bool {
+        if(Helpers::StrContainsAny($egyedimappa, '..', '/', '\\', ':', '*', '?', '"', '<', '>', '|') ||
+            Helpers::StrContainsAny($gyokermappa, '..', '/', '\\', ':', '*', '?', '"', '<', '>', '|'))
+            return false;
+
+        $feltoltesimappa = $GLOBALS['UPLOAD_FOLDER'] . $gyokermappa . '/' . $egyedimappa . '/';
+
+        if(!file_exists($feltoltesimappa)) {
+            mkdir($feltoltesimappa, 0755, true);
+        }
+
+        $baseDir = rtrim(realpath($GLOBALS['UPLOAD_FOLDER']), '/') . '/';
+        $target = rtrim(realpath($feltoltesimappa), '/') . '/';
+
+        if (!str_starts_with($target, $baseDir))
+            return false;
+
+        return $feltoltesimappa;
+    }
+
     private function ValidateFajl($fajl, $mediatypes) : array {
         $valid = true;
         $hiba = "";
@@ -144,4 +153,5 @@ class FeltoltesHandler
 
         return ['eredmeny' => $valid, 'hiba' => $hiba];
     }
+
 }
