@@ -12,29 +12,22 @@ use PHPMailer\PHPMailer\Exception;
 
 class MailHandler
 {
-    private $mail;
-    private $messageset = false;
-    public $cimzettszam = 0;
+    private PHPMailer $mail;
+    private bool $messageset = false;
+    public int $cimzettszam = 0;
 
     public function __construct()
 	{
         $this->mail = new PHPMailer(true);
         //$this->mail->SMTPDebug = SMTP::DEBUG_SERVER;
-        $beallitasokdb = new MySQLHandler("SELECT * FROM beallitasok;");
-
-        $beallitasok = array();
-        foreach($beallitasokdb->Result() as $beallitas)
-        {
-            $beallitasok[$beallitas['nev']] = $beallitas['ertek'];
-        }
-        $this->mail->Host       = $beallitasok['mailserver'];
-        $this->mail->Port       = $beallitasok['mailport'];
-        $this->mail->Username   = $beallitasok['mailuser'];
-        $this->mail->Password   = $beallitasok['mailpassword'];
-        $this->mail->setFrom($beallitasok['mailfrom'], 'Mailer');
+        $this->mail->Host       = $GLOBALS['MAIL_HOST'];
+        $this->mail->Port       = $GLOBALS['MAIL_PORT'];
+        $this->mail->Username   = $GLOBALS['MAIL_USERNAME'];
+        $this->mail->Password   = $GLOBALS['MAIL_PASSWORD'];
+        $this->mail->setFrom($GLOBALS['MAIL_FROM'], $GLOBALS['MAIL_FROMNEV']);
         $this->mail->isSMTP();
-        $this->mail->SMTPAuth   = true;
-        $this->mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $this->mail->SMTPAuth   = false; //! ÉLES KÖRNYEZETBEN TRUE-RA TENNI!!!
+        $this->mail->SMTPSecure = false; // ÉLES KÖRNYEZETBEN:  PHPMailer::ENCRYPTION_STARTTLS;
         $this->mail->CharSet = "UTF-8";
         $this->mail->isHTML(true);
         $this->mail->SMTPOptions = array(
@@ -44,7 +37,6 @@ class MailHandler
                 'allow_self_signed' => true
                 )
             );
-
 
         $arguments = func_get_args();
         $numberOfArguments = func_num_args();
@@ -77,7 +69,7 @@ class MailHandler
         $this->mail->Subject = $targy;
     }
 
-    public function AddAddress($cimzett)
+    public function AddAddress($cimzett) : void
     {
         if(is_array($cimzett))
         {
@@ -94,12 +86,12 @@ class MailHandler
         }        
     }
 
-    public function Subject($targy)
+    public function Subject($targy) : void
     {
         $this->mail->Subject = $targy;
     }
 
-    public function Send()
+    public function Send() : void
     {
         if($this->messageset && $this->cimzettszam > 0)
         {
