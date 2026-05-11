@@ -7,7 +7,7 @@ if (!defined('ROOT_PATH')) {
     if($this->megerosit)
     {
         ?><h1>Új jelszó megadása</h1>
-        <form action="./elfelejtettjelszo" method="post">
+        <form action="<?= ROOT_PATH ?>/elfelejtettjelszo" method="post">
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
             <input type="hidden" name="megerosit" value="<?= $this->megerositokod ?>">
             <div>

@@ -14,5 +14,6 @@ if (!defined('ROOT_PATH')) {
         ?><a href="<?= ROOT_PATH . '/recept/uj' ?>">
             Új recept felvitele
         </a><?php
+        ?><?=Helpers::RenderArrayAsTable($this->recept, 'recept', 'slug');
     }
 ?></div>

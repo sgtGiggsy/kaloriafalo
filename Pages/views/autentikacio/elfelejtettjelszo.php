@@ -5,7 +5,7 @@ if (!defined('ROOT_PATH')) {
 }
 ?><div class="normalcontent">
     <h1>Elfelejtett jelszó</h1>
-    <form action="./elfelejtettjelszo" method="post">
+    <form action="<?= ROOT_PATH ?>/elfelejtettjelszo" method="post">
         <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
         <div>
             <label for="email">E-mail cím</label>

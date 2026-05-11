@@ -10,8 +10,8 @@ use Kaloriafalo\Classes\Settings;
 class Autentikacio extends Page
 {
     public ?string $eredmeny = null;
-    private bool $megerosit = false;
-    private ?string $megerositokod;
+    protected bool $megerosit = false;
+    protected ?string $megerositokod;
     protected string $viewsgyoker = __DIR__ . "/views/autentikacio/";
     protected array $views = [
         'belepes' => 'belepes.php',
@@ -26,40 +26,30 @@ class Autentikacio extends Page
     ];
 
     public function Router(array $params) : Page {
-        //$this->validpagemethods = ['megerosit', 'sikeres', 'sikertelen'];
-        //$params = $this->ParseGet($params);
+        $this->validpagemethods = ['sikeres', 'megerosit', 'sikertelen'];
+        $params = $this->ParseGet($params);
+        $this->muvelet = $this->selectedpage;
         $megerositokod = null;
-        if(in_array('megerosit', $params)) {
-            $key = array_search('megerosit', $params);
-            if(isset($params[$key + 1])) {
-                $megerositokod = $params[$key + 1];
-                if($this->selectedpage == 'regisztracio') {
-                    $this->megerosit = $this->UserMegerosit($megerositokod);
-                }
-                else
-                    $this->megerosit = $this->ElfelejtettJelszoMegerosit($megerositokod);
-            }
-            if(!$this->megerosit)
-                return $this;
-        }
 
         if($this->selectedpage == 'regisztracio') {
-            if(in_array('sikeres', $params))
-                $this->view = __DIR__ . "/views/autentikacio/" . $this->views['sikeresreg'];
-            elseif(in_array('sikertelen', $params))
+            if($params['method'] == 'sikeres')
+                $this->view = $this->views['sikeresreg'];
+            elseif($params['method'] == 'sikertelen')
                 $this->aloldal = 'sikertelenreg';
-            elseif($megerositokod) {
-                $this->view = __DIR__ . "/views/autentikacio/" . $this->views['regmegerosit'];
+            elseif($params['method'] == 'megerosit') {
+                $this->megerosit =  $this->RegisztracioMegerosit($params);
+                $this->view = $this->views['regmegerosit'];
             }
         }
 
         if($this->selectedpage == 'elfelejtettjelszo') {
-            if(in_array('megerosit', $params))
-                $this->view = __DIR__ . "/views/autentikacio/" . $this->views['ujjelszo'];
-            elseif(in_array('sikeres', $params))
-                $this->view = __DIR__ . "/views/autentikacio/" . $this->views['jelszoigenyelve'];
+            if($params['method'] == 'megerosit') {
+                $this->megerosit = $this->ElfelejtettJelszoMegerosit($params['elemid']);
+                $this->view = $this->views['ujjelszo'];
+            }
+            elseif($params['method'] == 'sikeres')
+                $this->view = $this->views['jelszoigenyelve'];
         }
-
         return $this;
     }
 
@@ -85,7 +75,7 @@ class Autentikacio extends Page
         include(__DIR__ . "/views/_assets/htmlheader.php");
     }
 
-    private function Belepes() : bool {
+    protected function Belepes() : bool {
         // Felhasználó beléptetése/jogosultsági szintjének ellenőrzése
         $loginsuccess = false;
         $this->mixintext = "Hibás felhasználónév, vagy jelszó!";
@@ -147,7 +137,7 @@ class Autentikacio extends Page
         return $loginsuccess;
     }
 
-    private function Regisztracio() : bool {
+    protected function Regisztracio() : bool {
         $regisztracio = false;
         $this->mixintext = "A regisztráció nem sikerült!";
         $this->redirtarget = ROOT_PATH . "/regisztracio/sikertelen";
@@ -207,7 +197,7 @@ class Autentikacio extends Page
         return $regisztracio;
     }
 
-    private function Elfelejtettjelszo() : bool {
+    protected function Elfelejtettjelszo() : bool {
         $ret = false;
         if(isset($_POST['email'])) {
             $this->mixintext = "Új jelszó igényelve!";
@@ -220,6 +210,15 @@ class Autentikacio extends Page
             if(!$this->ElfelejtettJelszoMegerosit($_POST['megerosit'])) {
                 $this->mixintext = "A megerősítőkód nem egyezik!";
                 $this->redirtarget = ROOT_PATH . "/elfelejtettjelszo/sikertelen";
+                return false;
+            }
+
+            if(!preg_match('/[a-z]/', $_POST['jelszo']) ||
+                !preg_match('/[A-Z]/', $_POST['jelszo']) ||
+                !preg_match('/\d/', $_POST['jelszo']) ||
+                !preg_match('/[^a-zA-Z\d]/', $_POST['jelszo'])
+            ) {
+                $this->mixintext = "A megadott új jelszó komplexsége nem megfelelő!";
                 return false;
             }
 
@@ -239,7 +238,7 @@ class Autentikacio extends Page
         return $ret;
     }
 
-    private function Jelszocsere() : bool {
+    protected function Jelszocsere() : bool {
         $this->mixintext = "A jelszó frissítése nem sikerült!";
         $this->redirtarget = $_SERVER['REQUEST_URI'];
         if(!Controller::RequiredValidator('regijelszo', 'ujjelszo', 'ujjelszoismetles')) {
@@ -298,12 +297,29 @@ class Autentikacio extends Page
             return false;
     }
 
+    private function RegisztracioMegerosit($params) : bool {
+        if(!isset($params['elemid']))
+            $this->megerosit = false;
+        else
+            $this->megerosit = $this->UserMegerosit($params['elemid']);
+
+        if($this->megerosit)
+            $this->mixintext = "A felhasználói fiók megerősítése sikeres volt.";
+        else
+            $this->mixintext = "A felhasználói fiók megerősítése nem sikerült!";
+
+        $this->muvelet = 'Felhasználói fiók megerősítése';
+        $this->eredmeny = $this->megerosit;
+
+        return $this->megerosit;
+    }
+
     private function Mailer(string $email, string $verifstring, ?string $usernev = null) : void {
         $mailtargy = $message = null;
         if($usernev) {
             $mailtargy = "Regisztráció megerősítése";
             $message = "<h1>Kedves $usernev!</h1>
-                <p>A regisztrációs folyamat befejezéséhez kattints az alábbi linkre</p>
+                <p>A KaloriaFalo.hu fiókod elkészült. A regisztrációs folyamat befejezéséhez kattints az alábbi linkre</p>
                 <p><a href=" . ROOT_PATH . "/regisztracio/megerosit/$verifstring>Fiók aktiválása</a></p>
                 <p>vagy másold ki a linket, és illeszd a böngésződ címsorába!</p>
                 <p>" . ROOT_PATH . "/regisztracio/megerosit/$verifstring</p>";

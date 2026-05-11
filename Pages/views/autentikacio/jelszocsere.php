@@ -5,7 +5,7 @@ if (!defined('ROOT_PATH')) {
 }
 ?><div class="normalcontent">
     <h1>Új jelszó megadása</h1>
-    <form action="./jelszocsere" method="post">
+    <form action="<?= ROOT_PATH ?>/jelszocsere" method="post">
         <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
         <div>
             <label for="regijelszo">Jelenlegi jelszó</label>

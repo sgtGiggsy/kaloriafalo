@@ -5,7 +5,7 @@ if (!defined('ROOT_PATH')) {
 }
 ?><div class="normalcontent">
     <h1>Regisztráció</h1>
-    <form action="./regisztracio" method="post">
+    <form action="<?= ROOT_PATH ?>/regisztracio" method="post">
         <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
         <div>
             <label for="usernev">Felhasználónév</label>
