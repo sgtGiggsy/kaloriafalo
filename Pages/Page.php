@@ -26,8 +26,9 @@ Class Page
     public array $apimethods = []; // Az osztály elérhető API metódusai. Ami ebben nem szerepel, az nem hívható meg API-ként. A GET-re és a POST-ra is külön tömb-öt kell megadni!
     protected array $PHPvarsToJS = []; // Változók, amiket a PHP-ból generálunk, de a JS felületen akarunk használni. Közvetlenül a jsfiles tömb előtt kerül renderelésre.
     protected array $jsfiles = []; // Az osztály által használt JS fájlok elérési útjai. A tömbbe megadott fájlokat a rendszer az oldal legalján tölti be.
-    protected ?string $localcss; // Egyedi CSS fájl, amennyiben egy oldalhoz szükség lenne rá.
+    protected ?string $localCSS = null; // Egyedi CSS fájl, amennyiben egy oldalhoz szükség lenne rá.
     protected ?string $feltoltesgyoker; // Az oldalhoz tartozó feltöltések uploads mappán belüli mappája. KIZÁRÓLAG A NÉV! Az 'uploads' hardcode-olva van a feltöltésekhez, abból egyik oldal sem tud kitörni.
+    protected ?string $egyedimappa; // Az oldal feltöltésgyökerén belüli egyedi mappa. Pl, ha a feltöltésgyökér a "receptek", akkor az egyedi mappa a '2026'. Tartalmazhat slash-t (mondjuk 2026/04), de path traversal ellen akkor is védett.
     protected array $validpagemethods = []; // Egy oldal használható metódusai. Ebből tudja a rendszer, hogy egy $_GET-ből érkező tömbelem az ID, vagy valami metódus
     protected string $viewsgyoker = ROOT_DIR; // Az oldal view fájljainak gyökere
     protected ?string $view; // A jelenleg kiválasztott view fájl

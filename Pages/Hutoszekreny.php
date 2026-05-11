@@ -138,13 +138,11 @@ class Hutoszekreny extends Page
         $this->muvelet = 'szerkeszt';
         if($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->form = $this->Form('szerkeszt', $this->hutoszekreny);
-            $this->pagepath = 'hutoszekreny/szerkeszt/' . $this->hutoszekreny['huto_id'];
             $this->view = $this->views['szerkeszt'];
         }
     }
 
     private function Hutoszkerenylista() : void {
-        $this->pagepath = 'hutoszekrenyek';
         $this->view = $this->views['hutoszekrenyek'];
         $this->hutoszekreny = HutoszekrenyDB::GetHutoszekrenyek();
     }

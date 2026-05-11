@@ -44,7 +44,6 @@ class Alapanyag extends Page
             if($params['method'] == 'uj' && Settings::$uid) {
                 $this->muvelet = 'uj';
                 if($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                    $this->pagepath = 'alapanyag/uj';
                     $this->view = $this->views['uj'];
                     $this->form = $this->Form('uj');
                 }
@@ -77,13 +76,11 @@ class Alapanyag extends Page
                 }
                 else {
                     $this->form = $this->Form('szerkeszt', $alapanyag);
-                    $this->pagepath = 'alapanyag/szerkeszt/'. $alapanyag['slug'];
                     $this->view = $this->views['szerkeszt'];
                 }
             }
         }
         elseif($this->selectedpage == 'alapanyagok') {
-            $this->pagepath = 'alapanyagok';
             $this->view = $this->views['alapanyagok'];
             $this->alapanyag = AlapanyagDB::GetAlapanyagok();
         }

@@ -12,8 +12,7 @@ namespace Kaloriafalo\template;
 	<!-- Facebook Open Graph rész -->
     <?php
     /** @var Controller $page */
-	$page->HtmlHead();
-	$page->LdJSON(); ?>
+	$page->HtmlHead(); ?>
 </head>
 
 <body>

@@ -1,4 +1,5 @@
 <?php
+define("ROOT_DIR", __DIR__);
 // Alap includolások
 require('./includes/config.inc.php');
 require('./includes/autoload.inc.php');
@@ -11,7 +12,6 @@ use Kaloriafalo\Classes\Logging;
 use Kaloriafalo\Classes\Oldalgyujto;
 use Kaloriafalo\Classes\Settings;
 
-define("ROOT_DIR", __DIR__);
 define("DEBUG_MODE", true);
 define("ROOT_PATH", $RootPath);
 $uid = null;
