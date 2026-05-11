@@ -91,7 +91,7 @@ class FeltoltesHandler
     }
 
     private function SetPath(string $gyokermappa, string $egyedimappa) : string|bool {
-        if(Helpers::StrContainsAny($egyedimappa, '..', '/', '\\', ':', '*', '?', '"', '<', '>', '|') ||
+        if(Helpers::StrContainsAny($egyedimappa, '..', ':', '*', '?', '"', '<', '>', '|') ||
             Helpers::StrContainsAny($gyokermappa, '..', '/', '\\', ':', '*', '?', '"', '<', '>', '|'))
             return false;
 
