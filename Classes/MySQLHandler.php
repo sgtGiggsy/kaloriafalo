@@ -407,6 +407,26 @@ class MySQLHandler
         return $returnarr;
     }
 
+    public function EscapedArray(string ...$htmlfields) {
+        $returnarr = [];
+        foreach($this->result as $sor)
+        {
+            $sorarr = [];
+            foreach($sor as $key => $value) {
+                if($htmlfields && in_array($key, $htmlfields))
+                    $sorarr[$key] = $value;
+                else {
+                    if($value === null)
+                        $sorarr[$key] = null;
+                    else
+                        $sorarr[$key] = htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                }
+            }
+            $returnarr[] = $sorarr;
+        }
+        return $returnarr;
+    }
+
     public function ToTable()
     {
         ?><table>
