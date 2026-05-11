@@ -6,11 +6,7 @@ use Kaloriafalo\Classes\Settings;
 
 Class Page
 {
-    public ?string $redirtarget = null;
-    public string $selectedpage;
-    public ?string $muvelet = null;
-    public ?string $mixintext = null;
-    public array $apimethods = [];
+    // <--- HTML META TAG-EK ---> //
     public string $cimke = "";
     protected array $keywords = array();
     protected ?string $canonical = null;
@@ -21,17 +17,25 @@ Class Page
     protected ?string $ablakcim = null;
     protected ?string $robots = null;
     protected ?string $sitedesc = null;
-    protected ?string $pagepath = null;
-    protected array $jsfiles = [];
-    protected array $PHPvarsToJS = [];
-    protected ?string $localcss = "";
-    protected array $validpagemethods = [];
-    protected string $viewsgyoker = ROOT_DIR;
-    protected ?string $view;
-    protected bool $irasjog = false;
-    protected ?string $aloldal = null;
-    private string $file;
-    protected array $views = [];
+
+    // <--- Funkcionális feladatokat ellátó osztály változók ---> //
+    public ?string $redirtarget = null; // Ha meg van adva, POST után erre a címre irányít a Controller.
+    public string $selectedpage; // Ez választja ki a betöltendő view-t. A $_GET['page'] értéke kerül bele
+    public ?string $muvelet = null; // Ez választja ki a POST folyamatot lebonyolító metódust
+    public ?string $mixintext = null; // POST utáni üzeneteket tartalmazó változó
+    public array $apimethods = []; // Az osztály elérhető API metódusai. Ami ebben nem szerepel, az nem hívható meg API-ként. A GET-re és a POST-ra is külön tömb-öt kell megadni!
+    protected array $PHPvarsToJS = []; // Változók, amiket a PHP-ból generálunk, de a JS felületen akarunk használni. Közvetlenül a jsfiles tömb előtt kerül renderelésre.
+    protected array $jsfiles = []; // Az osztály által használt JS fájlok elérési útjai. A tömbbe megadott fájlokat a rendszer az oldal legalján tölti be.
+    protected ?string $localcss; // Egyedi CSS fájl, amennyiben egy oldalhoz szükség lenne rá.
+    protected ?string $feltoltesgyoker; // Az oldalhoz tartozó feltöltések uploads mappán belüli mappája. KIZÁRÓLAG A NÉV! Az 'uploads' hardcode-olva van a feltöltésekhez, abból egyik oldal sem tud kitörni.
+    protected array $validpagemethods = []; // Egy oldal használható metódusai. Ebből tudja a rendszer, hogy egy $_GET-ből érkező tömbelem az ID, vagy valami metódus
+    protected string $viewsgyoker = ROOT_DIR; // Az oldal view fájljainak gyökere
+    protected ?string $view; // A jelenleg kiválasztott view fájl
+    protected bool $irasjog = false; // Ez a változó tárolja el, hogy az oldalon egy adott felhasználó írhat-e.
+    protected ?string $aloldal = null; // Az aloldal egy view fájl, amit a fő view fájl elé renderel az oldal. Üzenetek átadására szolgál.
+    protected array $views = []; // Az elérhető view fájlok listája, ahol a kulcs a $_GET['page']-ből várt érték, az érték pedig a tényleges PHP fájl neve
+    protected array $mediatypes = []; // Fájlokat tartalmazó POST esetén ezeket a fájlokat fogadja el a rendszer valid bevitelként MIME check is történik!
+    public string $form_mediatypes = "'image/jpeg', 'image/png', 'image/bmp', 'image/webp'"; // Itt kell meghatározni, hogy milyen fájlformátumokat fogad a fájlfeltöltő menü a felhasználói UI-n. Csak kozmeztika, és kézzel kell megadni!
 
     public function __construct(string $type) {
         $this->title = $GLOBALS['ablakcim'];
