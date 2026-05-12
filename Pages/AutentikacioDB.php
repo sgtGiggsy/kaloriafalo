@@ -24,14 +24,16 @@ class AutentikacioDB
     }
 
     public static function UsernevFromEmail(string $email) : ?string {
+        $email = filter_input($email, FILTER_SANITIZE_EMAIL);
         $user = new MySQLHandler("SELECT usernev FROM felhasznalok WHERE email = ?;", $email);
         if($user->sorokszama == 1)
-            return $user->Fetch()['usernev'];
+            return htmlspecialchars($user->Fetch()['usernev'], ENT_QUOTES, 'UTF-8');
         else
             return null;
     }
 
     public static function UsernameCheck(string $usernev) : bool {
+        $usernev = htmlspecialchars($usernev, ENT_QUOTES, 'UTF-8');
         $check = new MySQLHandler("SELECT usernev FROM felhasznalok WHERE usernev = ?", $usernev);
         if($check->sorokszama == 0)
             return false;
@@ -40,6 +42,7 @@ class AutentikacioDB
     }
 
     public static function EmailCheck(string $email) : bool {
+        $email = filter_input($email, FILTER_SANITIZE_EMAIL);
         $emailcheck = new MySQLHandler("SELECT email FROM felhasznalok WHERE email = ?", $email);
         if($emailcheck->sorokszama == 0)
             return false;
@@ -53,6 +56,8 @@ class AutentikacioDB
     }
 
     public static function UserRegisztracio(string $usernev, string $email, string $hashedpassword, string $verifstring) : int {
+        $usernev = htmlspecialchars($usernev, ENT_QUOTES, 'UTF-8');
+        $email = filter_input($email, FILTER_SANITIZE_EMAIL);
         $newuser = new MySQLHandler("INSERT INTO felhasznalok (usernev, email, jelszo, allapot, verifstring, verifstring_hatarido)
             VALUES (?, ?, ?, ?, ?, NOW() + INTERVAL 1 HOUR)",
             $usernev, $email, $hashedpassword, 1, $verifstring);
@@ -60,12 +65,14 @@ class AutentikacioDB
     }
 
     public static function ElfelejtettJelszo(string $verifstring, string $email) : bool {
+        $email = filter_input($email, FILTER_SANITIZE_EMAIL);
         $ujjelszo = new MySQLHandler("UPDATE felhasznalok SET verifstring = ?, verifstring_hatarido = NOW() + INTERVAL 1 HOUR WHERE email = ?;", $verifstring, $email);
         return $ujjelszo->siker;
     }
 
-    public static function ElfelejtettUj(string $hashedpassword, string $megerosit) : bool {
-        $ujjelszo = new MySQLHandler("UPDATE felhasznalok SET jelszo = ?, verifstring = ?, verifstring_hatarido = ? WHERE verifstring = ?;", $hashedpassword, null, null, $megerosit);
+    public static function ElfelejtettUj(string $hashedpassword, string $verifstring) : bool {
+        $verifstring = htmlspecialchars($verifstring, ENT_QUOTES, 'UTF-8');
+        $ujjelszo = new MySQLHandler("UPDATE felhasznalok SET jelszo = ?, verifstring = ?, verifstring_hatarido = ? WHERE verifstring = ?;", $hashedpassword, null, null, $verifstring);
         return $ujjelszo->siker;
     }
 
@@ -75,6 +82,7 @@ class AutentikacioDB
     }
 
     public static function MegerositoKodCheck(string $megerositokod) : ?int {
+        $megerositokod = htmlspecialchars($megerositokod, ENT_QUOTES, 'UTF-8');
         $osszevet = new MySQLHandler("SELECT felhasznalo_id FROM felhasznalok WHERE verifstring = ?;", $megerositokod);
         if($osszevet->sorokszama == 1)
             return $osszevet->Fetch()['felhasznalo_id'];
@@ -88,6 +96,7 @@ class AutentikacioDB
     }
 
     public static function ElfelejtettJelszoMegerosit(string $megerositokod) : bool {
+        $megerositokod = htmlspecialchars($megerositokod, ENT_QUOTES, 'UTF-8');
         $osszevet = new MySQLHandler("SELECT felhasznalo_id FROM felhasznalok WHERE verifstring = ? AND verifstring_hatarido > NOW();", $megerositokod);
         if($osszevet->sorokszama == 1)
             return true;

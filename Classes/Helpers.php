@@ -45,6 +45,10 @@ class Helpers
         return date('Y-m-d H:i:s', $timestamp);
     }
 
+    public static function SQLTimeStampToDate(?string $timestamp = null) {
+        return date('Y-m-d', strtotime($timestamp));
+    }
+
     public static function ArrayKeyLetezik(array $array, string ...$keys): bool {
         foreach ($keys as $key) {
             if (!array_key_exists($key, $array)) {

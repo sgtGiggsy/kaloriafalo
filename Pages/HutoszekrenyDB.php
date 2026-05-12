@@ -20,14 +20,20 @@ class HutoszekrenyDB
     }
 
     public static function GetHutoszekrenyByUser(int $felhasznalo_id) : array {
-        $huto = new MySQLHandler("SELECT * FROM hutoszekrenyek WHERE felhasznalo_id = ?;", $felhasznalo_id);
+        $huto = new MySQLHandler("SELECT huto_id, huto_nev, usernev
+            FROM hutoszekrenyek
+                INNER JOIN felhasznalok ON hutoszekrenyek.felhasznalo_id = felhasznalok.felhasznalo_id
+            WHERE felhasznalok.felhasznalo_id = ?;", $felhasznalo_id);
         $huto = $huto->EscapedArray()[0];
         $tartalom = self::GetHutoTartalomHelper($huto['huto_id']);
         return ['huto' => $huto, 'tartalom' => $tartalom];
     }
 
     public static function GetHutoszekrenyById(int $hutoszekreny_id) : array {
-        $huto = new MySQLHandler("SELECT * FROM hutoszekrenyek WHERE huto_id = ?;", $hutoszekreny_id);
+        $huto = new MySQLHandler("SELECT huto_id, huto_nev, usernev
+            FROM hutoszekrenyek
+                INNER JOIN felhasznalok ON hutoszekrenyek.felhasznalo_id = felhasznalok.felhasznalo_id
+            WHERE huto_id = ?;", $hutoszekreny_id);
         $huto = $huto->AsArray()[0];
         $tartalom = self::GetHutoTartalomHelper($huto['huto_id']);
         return ['huto' => $huto, 'tartalom' => $tartalom];
