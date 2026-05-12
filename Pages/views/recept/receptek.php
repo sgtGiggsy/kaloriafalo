@@ -27,7 +27,7 @@ if (!defined('ROOT_PATH')) {
                             </div>
                             <div class="spreader"></div>
                             <div class="ertekeles" title="Átlag: <?=($recept['ertekeles'] ?? 0) . ' a ' . $recept['ertekelesek_szama']?> értékelésből">
-                                <?=GrafikaiElemek::Ertekeles($recept['ertekeles'])?>
+                                <?=GrafikaiElemek::Ertekeles($recept['ertekeles'], $recept['recept_id'])?>
                             </div>
                         </div>
                     </div>

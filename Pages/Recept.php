@@ -2,6 +2,7 @@
 
 namespace Kaloriafalo\Pages;
 
+use Cassandra\Set;
 use Kaloriafalo\Classes\FeltoltesHandler;
 use Kaloriafalo\Classes\FormBuilder;
 use Kaloriafalo\Classes\Helpers;
@@ -226,19 +227,7 @@ class Recept extends Page
             return false;
     }
 
-    public function Bookmark() : array|bool {
-        if(!isset($_POST['recept_id']))
-            return false;
 
-        if(!Settings::$uid)
-            return false;
-
-        $eredmeny = ReceptDB::BookmarkRecept($_POST['recept_id'], Settings::$uid);
-        $data['eredmeny'] = $eredmeny;
-        $data['message'] = $eredmeny ? 'A recept mentése sikeres volt' : 'A recept mentése nem sikerült!';
-
-        return $data;
-    }
 
     private function ParseAlapanyagok(?array $alapanyagok) : array {
         if(!$alapanyagok)
@@ -311,6 +300,20 @@ class Recept extends Page
         return false;
     }
 
+    public function Bookmark() : array|bool {
+        if(!isset($_POST['recept_id']))
+            return false;
+
+        if(!Settings::$uid)
+            return false;
+
+        $eredmeny = ReceptDB::BookmarkRecept($_POST['recept_id'], Settings::$uid);
+        $data['eredmeny'] = $eredmeny;
+        $data['message'] = $eredmeny ? 'A recept mentése sikeres volt' : 'A recept mentése nem sikerült!';
+
+        return $data;
+    }
+
     public function Ertekel() : array|bool {
         if($_SERVER['REQUEST_METHOD'] !== 'POST'
             || !isset($_POST['recept_id'])
@@ -329,6 +332,10 @@ class Recept extends Page
             return ['message' => 'Hibás értékelés! Csak 1-től 5-ig lehet értékelni!',
                 'status' => 400];
 
-        return ReceptDB::Ertekeles(Settings::$uid, $_POST['recept_id'], $ertekeles);
+        $ertekeles = ReceptDB::Ertekeles(Settings::$uid, $_POST['recept_id'], $ertekeles);
+        $data['eredmeny'] = $ertekeles;
+        $data['message'] = $ertekeles ? 'Az értékelésed sikeresen hozzáadva' : 'A receptet nem sikerült értékelni!';
+
+        return $data;
     }
 }

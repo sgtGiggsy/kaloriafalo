@@ -7,6 +7,22 @@ use Kaloriafalo\Classes\Settings;
 
 class ReceptDB
 {
+    private static string $alap_lista_query = "SELECT recept_nev, lathatosag, receptek.recept_id AS recept_id,
+                    slug, cukor, gluten, laktoz, fajl AS kepurl,
+                    AVG(recept_ertekelesek.ertekeles) AS ertekeles,
+                    COUNT(recept_ertekelesek.ertekeles) AS ertekelesek_szama,
+                    IF(szakacskonyvrecept_id, 1, 0) AS mentve
+                FROM receptek
+                    LEFT JOIN recept_ertekelesek ON recept_ertekelesek.recept_id = receptek.recept_id
+                    LEFT JOIN recept_kepek ON recept_kepek.recept_id = receptek.recept_id
+                    LEFT JOIN feltoltesek ON feltoltesek.feltoltes_id = recept_kepek.feltoltes_id
+                    LEFT JOIN szakacskonyv_receptek ON szakacskonyv_receptek.recept_id = receptek.recept_id
+                    LEFT JOIN szakacskonyvek ON szakacskonyv_receptek.szakacskonyv_id = szakacskonyvek.szakacskonyv_id";
+    private static string $alap_lista_query_where = " WHERE (lathatosag = 1 OR lathatosag = 0 AND receptek.felhasznalo_id = ?)
+                    AND (recept_kepek.elsodleges IS NULL OR recept_kepek.elsodleges = 1)
+                    AND (szakacskonyvrecept_id IS NULL OR szakacskonyvek.felhasznalo_id = ?)
+                    GROUP BY receptek.recept_id";
+    private static string $alap_lista_query_order = " ORDER BY ertekeles DESC;";
     public static function UjRecept(string $recept_nev, string $recept_szoveg, int $lathatosag, $slug, ?string $adagmeret, array $alapanyagok, ?int $elokeszuletek, ?int $sutesido, int $uid) : int|bool {
         $sikeresdb = true;
         $allergenek = $alapanyagok['allergenek'];
@@ -112,21 +128,12 @@ class ReceptDB
     }
 
     public static function GetReceptek() : array {
-        $receptek = new MySQLHandler("SELECT recept_nev, lathatosag, receptek.recept_id AS recept_id,
-                    slug, cukor, gluten, laktoz, fajl AS kepurl,
-                    AVG(recept_ertekelesek.ertekeles) AS ertekeles,
-                    COUNT(recept_ertekelesek.ertekeles) AS ertekelesek_szama,
-                    IF(szakacskonyvrecept_id, 1, 0) AS mentve
-                FROM receptek
-                    LEFT JOIN recept_ertekelesek ON recept_ertekelesek.recept_id = receptek.recept_id
-                    LEFT JOIN recept_kepek ON recept_kepek.recept_id = receptek.recept_id
-                    LEFT JOIN feltoltesek ON feltoltesek.feltoltes_id = recept_kepek.feltoltes_id
-                    LEFT JOIN szakacskonyv_receptek ON szakacskonyv_receptek.recept_id = receptek.recept_id
-                    LEFT JOIN szakacskonyvek ON szakacskonyv_receptek.szakacskonyv_id = szakacskonyvek.szakacskonyv_id
-                WHERE (lathatosag = 1 OR lathatosag = 0 AND receptek.felhasznalo_id = ?)
-                    AND (recept_kepek.elsodleges IS NULL OR recept_kepek.elsodleges = 1)
-                    AND (szakacskonyvrecept_id IS NULL OR szakacskonyvek.felhasznalo_id = ?)
-                GROUP BY receptek.recept_id;", Settings::$uid, Settings::$uid);
+        $receptek = new MySQLHandler(self::$alap_lista_query . self::$alap_lista_query_where . self::$alap_lista_query_order, Settings::$uid, Settings::$uid);
+        return $receptek->EscapedArray();
+    }
+
+    public static function GetSzakacskonyv() : array {
+        $receptek = new MySQLHandler(self::$alap_lista_query . self::$alap_lista_query_where . self::$alap_lista_query_order, Settings::$uid, Settings::$uid);
         return $receptek->EscapedArray();
     }
 
@@ -140,7 +147,6 @@ class ReceptDB
 
     public static function Ertekeles(int $uid, int $recept_id, int $ertekelesertek) : bool {
         $ertekeles = new MySQLHandler();
-        $ertekeles->StartTransaction();
         $ertekeles->Prepare("INSERT INTO recept_ertekelesek (ertekeles, felhasznalo_id, recept_id)
             VALUES (?, ?, ?)
             ON DUPLICATE KEY UPDATE ertekeles = VALUES(ertekeles);");

@@ -42,6 +42,40 @@ bookmarks.forEach(bookmark => {
 csillagok.forEach(csillag => {
     csillag.addEventListener("click", function (e) {
         e.preventDefault();
-        console.log(csillag.getAttribute("data-ertek"))
+        const receptId = csillag.getAttribute("data-receptid");
+        const ertek = csillag.getAttribute("data-ertek")
+        const formData = new FormData();
+
+        formData.append("recept_id", receptId);
+        formData.append("ertekeles", ertek);
+        formData.append("csrf_token", csrf_token);
+
+        fetch(RootPath + "/api/recept/ertekel", {
+            method: "POST",
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                let icon = 'success'
+                let message = 'Recept értékelése sikeresen mentve'
+                let title = 'Siker'
+                if(!data.success) {
+                    icon = 'error'
+                    message = data.error.message
+                    title = 'Hiba'
+                }
+                toaster.fire({
+                    title: title,
+                    text: message,
+                    icon: icon
+                });
+            })
+            .catch(error => {
+                toaster.fire({
+                    title: "Hiba",
+                    text: error,
+                    icon: "error"
+                });
+            });
     })
 });
