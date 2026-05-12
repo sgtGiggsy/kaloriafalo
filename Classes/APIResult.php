@@ -25,7 +25,7 @@ class APIResult
     public string $message = '';
     public array|bool $data = [];
     private string $requestmethod;
-    private array $request = [];
+    private array $request;
     private Page|bool $page;
     private array $hivas;
 
@@ -90,9 +90,12 @@ class APIResult
             }
         }
 
-        if(count($this->data) == 0) {
+        if(!is_bool($this->data) && count($this->data) == 0) {
             $this->message = 'A kiválasztott lekérdezés nem adott vissza adatot';
         }
+        else
+            $this->message = 'Sikeres módosítás!';
+
         return $this;
     }
 
@@ -155,12 +158,12 @@ class APIResult
         }
 
         // Van POST kérés, de vagy nem jött vele elem azonosító, vagy jött, de nem írható
-        if($requestmethod === 'POST'
+        /*if($requestmethod === 'POST'
             && (!$request['elemid'] || !$page->GetIrasjog($request['elemid']))) {
             $this->message = 'A kiválasztott elem írására nincs jogosultságod';
             $this->status = 403;
             return false;
-        }
+        }*/
 
         $this->status = 200;
         return $page;
