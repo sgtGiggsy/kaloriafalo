@@ -7,7 +7,7 @@ use Kaloriafalo\Classes\Settings;
 
 class ReceptDB
 {
-    public static function UjRecept(string $recept_nev, string $recept_szoveg, int $lathatosag, $slug, ?string $adagmeret, array $alapanyagok, ?int $elokeszuletek, ?int $sutesido, int $uid) : bool {
+    public static function UjRecept(string $recept_nev, string $recept_szoveg, int $lathatosag, $slug, ?string $adagmeret, array $alapanyagok, ?int $elokeszuletek, ?int $sutesido, int $uid) : int|bool {
         $sikeresdb = true;
         $allergenek = $alapanyagok['allergenek'];
         $receptgyarto = new MySQLHandler();
@@ -18,7 +18,6 @@ class ReceptDB
             $sikeresdb = false;
         }
         else {
-            print_r($alapanyagok);
             $recept_id = $receptgyarto->last_insert_id;
             $alapanyagok = $alapanyagok['alapanyagok'];
             foreach ($alapanyagok as $alapanyag) {
@@ -33,18 +32,69 @@ class ReceptDB
                 }
             }
         }
-        if(!$sikeresdb)
+        if(!$sikeresdb) {
             $receptgyarto->Rollback();
-        else
+            return false;
+        }
+        else {
             $receptgyarto->Commit();
+            return $recept_id;
+        }
+    }
 
-        return $sikeresdb;
+    public static function ReceptKepek(int $recept_id, array $kepidk) : bool {
+        $elsodleges = 1;
+        $kepek = new MySQLHandler();
+        $kepek->StartTransaction();
+        $kepek->Prepare("INSERT INTO recept_kepek (recept_id, feltoltes_id, elsodleges) VALUES (?, ?, ?);");
+
+        foreach($kepidk as $kepid) {
+            $kepek->Run($recept_id, $kepid, $elsodleges);
+            if($elsodleges == 1)
+                $elsodleges = 0;
+        }
+
+        if(!$kepek->siker) {
+            $kepek->Rollback();
+            return false;
+        }
+        else {
+            $kepek->Commit();
+            return true;
+        }
+    }
+
+    public static function BookmarkRecept(int $recept_id, int $felhasznalo_id) : bool {
+        $szakacskonyv_id = ReceptDB::GetSzakacskonyvId($felhasznalo_id);
+        $bookmark = new MySQLHandler();
+        $bookmark->Prepare("INSERT INTO szakacskonyv_receptek (recept_id, szakacskonyv_id) VALUES (?, ?);");
+        $bookmark->Run($recept_id, $szakacskonyv_id);
+        return $bookmark->siker;
+    }
+
+    public static function GetSzakacskonyvId(int $felhasznalo_id) : ?int {
+        $bookmark = new MySQLHandler("SELECT szakacskonyv_id FROM szakacskonyvek WHERE felhasznalo_id = ?;", $felhasznalo_id);
+        if($bookmark->sorokszama == 0)
+            return null;
+        else
+            return $bookmark->Fetch()['szakacskonyv_id'];
     }
 
     public static function GetRecept(string $slug) : ?array {
-        $recept = new MySQLHandler("SELECT recept_nev, recept_szoveg, letrehozas_ideje, slug, elokeszuletek, sutesido, lathatosag,
-                    receptek.cukor AS cukor, receptek.gluten AS gluten, receptek.laktoz AS laktoz, recept_id, felhasznalo_id
-                FROM receptek WHERE slug = ?;", $slug);
+        $recept = new MySQLHandler("SELECT recept_nev, recept_szoveg, receptek.letrehozas_ideje, slug, elokeszuletek, sutesido, lathatosag, adagmeret,
+                    receptek.cukor AS cukor, receptek.gluten AS gluten, receptek.laktoz AS laktoz, receptek.recept_id, receptek.felhasznalo_id,
+                    AVG(recept_ertekelesek.ertekeles) AS ertekeles,
+                    COUNT(recept_ertekelesek.ertekeles) AS ertekelesek_szama,
+                    IF(szakacskonyvrecept_id, 1, 0) AS mentve
+                FROM receptek
+                    LEFT JOIN recept_ertekelesek ON recept_ertekelesek.recept_id = receptek.recept_id
+                    LEFT JOIN recept_kepek ON recept_kepek.recept_id = receptek.recept_id
+                    LEFT JOIN feltoltesek ON feltoltesek.feltoltes_id = recept_kepek.feltoltes_id
+                    LEFT JOIN szakacskonyv_receptek ON szakacskonyv_receptek.recept_id = receptek.recept_id
+                    LEFT JOIN szakacskonyvek ON szakacskonyv_receptek.szakacskonyv_id = szakacskonyvek.szakacskonyv_id
+                WHERE receptek.slug = ?
+                    AND (szakacskonyvrecept_id IS NULL OR szakacskonyvek.felhasznalo_id = ?)
+                GROUP BY receptek.recept_id;", $slug, Settings::$uid);
         if($recept->sorokszama == 0)
             return null;
 

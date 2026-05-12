@@ -2,8 +2,10 @@
 
 namespace Kaloriafalo\Pages;
 
+use Kaloriafalo\Classes\FeltoltesHandler;
 use Kaloriafalo\Classes\FormBuilder;
 use Kaloriafalo\Classes\Helpers;
+use Kaloriafalo\Classes\MySQLHandler;
 use Kaloriafalo\Classes\Settings;
 
 class Recept extends Page
@@ -14,13 +16,15 @@ class Recept extends Page
         'GET' => ['kereses' => 'ReceptFuzzyList',
             'receptkategoriak' => 'ReceptKategoriak'],
         'POST' => ['ertekel' => 'Ertekel',
-            'kedvencel' => 'MentSzakacskonyv']
+            'bookmark' => 'Bookmark']
     ];
     protected string $viewsgyoker = __DIR__ . "/views/recept/";
     protected bool $irasjog = false;
-    protected array $jsfiles = [];
 
     protected FormBuilder $form;
+    protected array $headerviews = [
+        'recept' => 'receptheader.php'
+    ];
     protected array $views = [
         'recept' => 'recept.php',
         'receptek' => 'receptek.php',
@@ -34,6 +38,9 @@ class Recept extends Page
     public function Router(array $params) : Page {
         $this->validpagemethods = ['uj', 'szerkeszt'];
         $params = $this->ParseGet($params);
+        if($this->selectedpage == 'receptek' || $this->selectedpage == 'recept') {
+            $this->jsfiles[] = 'Pages/views/recept/assets/quickactions.js';
+        }
         if($this->selectedpage == 'recept') {
 
             if($params['method'] == 'uj' || $params['method'] == 'szerkeszt') {
@@ -66,8 +73,10 @@ class Recept extends Page
             }
             elseif(!$params['method'] == 'szerkeszt' && !$this->GetOlvasasjog($params['elemid']))
                 return new SinglePage('403');
-            else
+            else {
                 $this->view = $this->views['recept'];
+                $this->headerview = $this->headerviews['recept'];
+            }
 
             return $this;
         }
@@ -79,6 +88,7 @@ class Recept extends Page
         }
 
         if($this->selectedpage == 'szakacskonyv' && Settings::$uid) {
+            //TODO megírni a szakácskönyv adatbázis részt
             $this->view = $this->views['szakacskonyv'];
             return $this;
         }
@@ -109,57 +119,56 @@ class Recept extends Page
     }
 
     public function LdJSON() : void {
-        echo '<script type="application/ld+json">
+        if(!($this->selectedpage == 'recept' && !$this->muvelet))
+            return;
+        $recept = $this->recept['recept'];
+        $alapanyagok = $this->recept['alapanyagok'];
+        $kepek = $this->recept['kepek'];
+        $receptkepek = [];
+        $osszetevok = [];
+        foreach($alapanyagok as $alapanyag) {
+            $mennyiseg = ($alapanyag['mennyiseg']) ? $alapanyag['mennyiseg'] . ' ' : '';
+            $mertekegyseg = ($alapanyag['mertekegyseg']) ? $alapanyag['mertekegyseg'] . ' ' : '';
+            $osszetevok[] = $mennyiseg . $mertekegyseg . $alapanyag['alapanyag_nev'];
+        }
+        foreach($kepek as $kep) {
+            $receptkepek[] = ROOT_PATH . '/' . $kep['fajl'];
+        }
+        ?><script type="application/ld+json">
         {
             "@context": "https://schema.org",
           "@type": "Recipe",
-          "name": "Lusta Manci sajtos-tejfölöse",
-          "description": "Sajtos-tejfölös sült hús recept",
+          "name": "<?=$recept['recept_nev']?>",
+          "description": "<?=$recept['recept_nev']?>",
+          <?php if($recept['ertekelesek_szama'] > 0) { ?>
+            "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "<?=$recept['ertekeles']?>",
+                "ratingCount": "<?=$recept['ertekelesek_szama']?>"
+              },
+          <?php } ?>
         
           "recipeIngredient": [
-            "8 szelet sertéshús",
-            "5 dl tejföl",
-            "30 dkg sajt",
-            "napraforgóolaj (ízlés szerint)"
+            <?='"' . implode('",
+            "', $osszetevok) . '"'?>
         ],
         
-          "recipeInstructions": [
-            {
-                "@type": "HowToStep",
-              "text": "A húst kiklopfoljuk, sózzuk, borsozzuk, majd tepsibe fektetjük."
-            },
-            {
-                "@type": "HowToStep",
-              "text": "Ráöntjük az olajat és kevés vizet, majd megkenjük tejföllel."
-            },
-            {
-                "@type": "HowToStep",
-              "text": "Alufóliával lefedve 180°C-on kb. 35-40 percig sütjük."
-            },
-            {
-                "@type": "HowToStep",
-              "text": "Fólia levétele után megszórjuk sajttal, és pirosra sütjük."
-            }
-          ],
+          "recipeYield": "<?=$recept['adagmeret']?> adag",
         
-          "recipeYield": "4 adag",
+          "prepTime": "PT<?=$recept['elokeszuletek']?>M",
+          "cookTime": "PT<?=$recept['sutesido']?>M",
+          "totalTime": "PT<?=$recept['elokeszuletek'] + $recept['sutesido']?>M",
         
-          "prepTime": "PT15M",
-          "cookTime": "PT40M",
-          "totalTime": "PT55M",
-        
-          "datePublished": "2026-05-10",
+          "datePublished": "<?=Helpers::SQLTimeStampToDate($recept['letrehozas_ideje'])?>",
         
           "image": [
-            "uploads/receptkepek/randombasestring.jpg",
-            "uploads/receptek/randombasestring2.png"
+              <?='"' . implode('",
+              "', $receptkepek) . '"'?>
         ],
-        
-          "suitableForDiet": "https://schema.org/GlutenFreeDiet",
         
           "recipeCategory": "Főétel"
         }
-        </script>';
+        </script><?php
     }
 
     private function Form(string $muvelet, ?array $recept = null) : FormBuilder {
@@ -182,12 +191,23 @@ class Recept extends Page
     protected function Uj () : bool
     {
         if(Settings::$uid) {
+            $kepidk = null;
             $slug = Helpers::SlugGenerator($_POST['recept_nev']);
             $slug = Helpers::SlugVerifier($slug, [ReceptDB::class, 'GetRecept']);
             $alapanyagok = $this->ParseAlapanyagok($_POST['alapanyagok']);
             $eredmeny = ReceptDB::UjRecept($_POST['recept_nev'], $_POST['recept_szoveg'], $_POST['lathatosag'] ?? 0, $slug, $_POST['adagmeret'], $alapanyagok, $_POST['elokeszuletek'] ?? null, $_POST['sutesido'] ?? null, Settings::$uid);
-            if($eredmeny)
+            if($eredmeny) {
                 $this->redirtarget = ROOT_PATH . '/recept/' . $slug;
+
+                if (isset($_FILES['kepek'])) {
+                    $kepek = new FeltoltesHandler($this->mediatypes, 'receptkepek', date('Y'), 'receptkepek', Settings::$uid);
+                    $kepidk = $kepek->Feltoltes($_FILES['kepek']);
+                }
+                if($kepidk['eredmeny']) {
+                    $eredmeny = ReceptDB::ReceptKepek($eredmeny, $kepidk['uploadids']);
+                }
+            }
+
             return $eredmeny;
         }
         else
@@ -204,6 +224,20 @@ class Recept extends Page
         }
         else
             return false;
+    }
+
+    public function Bookmark() : array|bool {
+        if(!isset($_POST['recept_id']))
+            return false;
+
+        if(!Settings::$uid)
+            return false;
+
+        $eredmeny = ReceptDB::BookmarkRecept($_POST['recept_id'], Settings::$uid);
+        $data['eredmeny'] = $eredmeny;
+        $data['message'] = $eredmeny ? 'A recept mentése sikeres volt' : 'A recept mentése nem sikerült!';
+
+        return $data;
     }
 
     private function ParseAlapanyagok(?array $alapanyagok) : array {
@@ -275,9 +309,6 @@ class Recept extends Page
         if($this->recept['recept']['felhasznalo_id'] == Settings::$uid)
             return true;
         return false;
-    }
-
-    public function MentSzakacskonyv() {
     }
 
     public function Ertekel() : array|bool {
