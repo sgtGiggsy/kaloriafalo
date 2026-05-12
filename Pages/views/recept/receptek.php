@@ -17,12 +17,12 @@ if (!defined('ROOT_PATH')) {
         foreach ($this->recept as $recept) {
             ?><a href="<?=ROOT_PATH?>/recept/<?=$recept['slug']?>">
                 <div class="receptelem">
-                    <div class="receptelemkep"><img src="<?=ROOT_PATH . '/' . $recept['kepurl']?>" alt="Kép <?=$recept['recept_nev']?>-ről"/></div>
+                    <div class="receptelemkep"><img src="<?=ROOT_PATH . $recept['kepurl']?>" alt="Kép <?=$recept['recept_nev']?>-ről"/></div>
                     <div class="receptadatok">
                         <h2><?=$recept['recept_nev']?></h2>
                         <div class="spreader"></div>
                         <div class="userinterakciok">
-                            <div class="bookmark">
+                            <div class="bookmarking">
                                 <?=($recept['mentve']) ? GrafikaiElemek::$ikonok['bookmark_filled'] : sprintf(GrafikaiElemek::$ikonok['bookmark'], $recept['recept_id'])?>
                             </div>
                             <div class="spreader"></div>

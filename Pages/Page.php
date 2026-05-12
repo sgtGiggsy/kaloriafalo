@@ -31,11 +31,13 @@ Class Page
     protected ?string $egyedimappa; // Az oldal feltöltésgyökerén belüli egyedi mappa. Pl, ha a feltöltésgyökér a "receptek", akkor az egyedi mappa a '2026'. Tartalmazhat slash-t (mondjuk 2026/04), de path traversal ellen akkor is védett.
     protected array $validpagemethods = []; // Egy oldal használható metódusai. Ebből tudja a rendszer, hogy egy $_GET-ből érkező tömbelem az ID, vagy valami metódus
     protected string $viewsgyoker = ROOT_DIR; // Az oldal view fájljainak gyökere
-    protected ?string $view; // A jelenleg kiválasztott view fájl
+    protected ?string $view = null; // A jelenleg kiválasztott view fájl
+    protected ?string $headerview = null; // A jelenleg kiválasztott header fájl
     protected bool $irasjog = false; // Ez a változó tárolja el, hogy az oldalon egy adott felhasználó írhat-e.
     protected ?string $aloldal = null; // Az aloldal egy view fájl, amit a fő view fájl elé renderel az oldal. Üzenetek átadására szolgál.
     protected array $views = []; // Az elérhető view fájlok listája, ahol a kulcs a $_GET['page']-ből várt érték, az érték pedig a tényleges PHP fájl neve
-    protected array $mediatypes = []; // Fájlokat tartalmazó POST esetén ezeket a fájlokat fogadja el a rendszer valid bevitelként MIME check is történik!
+    protected array $headerviews = []; // Az oldal fejlécéhez elérhető view fájlok listája
+    protected array $mediatypes = ['image/jpeg', 'image/png', 'image/bmp', 'image/webp']; // Fájlokat tartalmazó POST esetén ezeket a fájlokat fogadja el a rendszer valid bevitelként. MIME check is történik!
     public string $form_mediatypes = "'image/jpeg', 'image/png', 'image/bmp', 'image/webp'"; // Itt kell meghatározni, hogy milyen fájlformátumokat fogad a fájlfeltöltő menü a felhasználói UI-n. Csak kozmeztika, és kézzel kell megadni!
 
     public function __construct(string $type) {
@@ -56,6 +58,12 @@ Class Page
     }
 
     public function LdJSON() : void {
+    }
+
+    public function RenderHeader() : void {
+        if(!$this->headerview || !file_exists($this->viewsgyoker . $this->headerview))
+            return;
+        include($this->viewsgyoker . $this->headerview);
     }
 
     public function Render() : void {

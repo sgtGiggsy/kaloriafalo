@@ -141,10 +141,6 @@ td a {
     width: 100%;
 }
 
-.tsorth {
-    cursor: pointer;
-}
-
 form, form > div {
     display: flex;
     flex-direction: column;
@@ -167,11 +163,6 @@ select, input:not([type="checkbox"]) {
 textarea, .ck-editor__editable {
     font-family: Helvetica, Arial, sans-serif;
     height: 30ch;
-}
-
-.kethetes {
-    width: max-content;
-    margin-bottom: 1em;
 }
 
 button, input[type="submit"] {
@@ -227,16 +218,6 @@ button, input[type="submit"] {
     height: auto;
     display: block;
     margin-bottom: 5px;
-}
-
-/* A .tox a TinyMCE beviteli mezőjének wrapperje */
-.tox {
-    border-radius: 0.45em !important;
-    padding: 0 !important;
-}
-
-.tox-promotion {
-    display: none !important;
 }
 
 nav li {
@@ -316,7 +297,7 @@ nav.mainmenu ul.links li {
 .menubutton span:nth-child(2) { top: 10px; }
 .menubutton span:nth-child(3) { top: 20px; }
 
-/* 🔄 AKTÍV ÁLLAPOT → X */
+/* AKTÍV ÁLLAPOT → X */
 .menubutton.active span:nth-child(1) {
   transform: rotate(45deg);
   top: 10px;
@@ -563,265 +544,9 @@ footer {
     text-decoration: none;
 }
 
-.palyaheader, .playerheader {
-    background-size: cover;
-    display: grid;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-}
-
-.playerheader {
-    background-position: center 30%;
-    height: 600px;
-}
-
-.playerheader h1, .palyaheader h1 {
-    font-weight: 100;
-    font-size: 4em;
-    margin-left: 0.5em;
-    margin-block-end: 0;
-}
-
-.playerheader svg, .palyaheader svg {
-    overflow: unset;
-    height: 1em;
-}
-
-.playertable {
-    align-self: end;
-    display: grid;
-    grid-template-columns: 150px 210px 1fr;
-    gap: 1em;
-    background-image: var(--playerheadgrad);
-    -webkit-backdrop-filter: blur(2px);
-    backdrop-filter: blur(2px);
-    padding: 1em;
-    align-items: center;
-    justify-items: center;
-}
-
-.playertableimage {
-    display: flex;
-    align-items: center;
-    justify-items: center;
-}
-
-.playertableimage div, .csapattableimage {
-    border-radius: 50%;
-    overflow: hidden;
-}
-
-.playertableimage div {
-    width: 150px;
-    height: 150px;
-}
-
-.csapattableimage {
-    width: 50px;
-    height: 50px;
-}
-
-.infobox {
-    font-size: 0.7em;
-}
-
-.infobox, .infbperson {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    height: max-content;
-}
-
-.infobox span {
-    display: block;
-    max-width: 30ch;
-}
-
-.infborg {
-    grid-column: 1/-1;
-}
-
-.ministatcontainer, .csapministatcontainer {
-    display: inline-flex;
-    flex-direction: column;
-    gap: 1em;
-    align-items: center;
-}
-
-.ministatcontainer {
-    width: 100%;
-}
-
-.csapministatcontainer {
-    grid-column: 1 / -1;
-    width: 100%;
-}
-
-.ministat {
-    width: clamp(300px, 600px, 100%);
-    font-size: 0.8em;
-    background-color: var(--ministatbg);
-    -webkit-backdrop-filter: blur(2px);
-    backdrop-filter: blur(1px);
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    font-weight: bold;
-    padding: 1.2em;
-    border-radius: 1em;
-    align-items: center;
-}
-
-.ministat div {
-    text-align: center;
-    position: relative;
-}
-
-.ministat > :not(:first-child) div::before {
-    position: absolute;
-    content: "";
-    height: 100%;
-    left: 0;
-    width: 2px;
-    background-color: var(--uzenetbg);
-}
-
-.ministat span {
-    font-size: 1.3em;
-}
-
-.dicsosegtabla {
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 2em;
-}
-
-.dicsosegtabla div {
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    border-radius: 0.3em;
-    padding: 0 1em;
-}
-
-.tabellak {
-    width: 90vw;
-}
-
-.versenyzostats {
-    width: 100%;
-}
-
-.tabellak, .versenyzostats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2em;
-}
-
-.tabellak > :first-child {
-  grid-column: 1 / -1;
-}
-
-.tabellak table, .versenyzostats table, .ellenfelbontas table, .fullwidth {
-    width: 100%;
-}
-
 .smalltable {
     width: 70vw;
     margin-bottom: 1em;
-}
-
-.tabellak tbody tr,
-.ellenfelbontas tbody tr {
-    border-top: 1px solid var(--tableborder);
-}
-
-.tabellak thead tr,
-.ellenfelbontas thead tr {
-    border-bottom: 1px solid var(--tableborder);
-}
-
-.tabellak tr, .tabellak tr a,
-.ellenfelbontas tr, .ellenfelbontas tr a {
-    color: var(--mainmenufont)
-}
-
-.tabellak thead tr,
-.ellenfelbontas thead tr {
-    background-image: var(--theadbg);
-}
-
-.tabellak thead tr,
-.ellenfelbontas thead tr {
-    background-image: var(--theadbg);
-}
-
-.tabellak thead tr:first-child th:first-child,
-.ellenfelbontas thead tr:first-child th:first-child {
-    border-top-left-radius: 0.5em;
-}
-
-.tabellak thead tr:first-child th:last-child,
-.ellenfelbontas thead tr:first-child th:last-child {
-    border-top-right-radius: 0.5em;
-}
-
-.sor0 {
-    background-image: var(--kiesettbg);
-}
-
-.sor1 {
-    background-image: var(--bajnokbg);
-}
-
-.sor2 {
-    background-image: var(--kihivobg);
-}
-
-.versenyzok, #adminmenu, .napkepek {
-    display: grid;
-    width: 90vw;
-    justify-content: center;
-}
-
-.versenyzok {
-    gap: 1em;
-    grid-template-columns: repeat(auto-fill, 150px);
-    max-width: 800px;
-}
-
-#adminmenu {
-    grid-template-columns: repeat(auto-fill, 80px);
-    gap: 1.5em;
-}
-
-#adminmenu figure {
-    margin: 0;
-}
-
-.napkepek {
-    grid-template-columns: repeat(auto-fit, minmax(200px, min-content));
-    gap: 1em;
-}
-
-.versenyzok div a,
-#adminmenu a {
-    display: flex;
-    flex-direction: column;
-    justify-items: center;
-    color: inherit;
-    text-decoration: none;
-    text-align: center;
-}
-
-.versenyzok span {
-    display: block;
-    text-align: center;
-}
-
-.versenyzok div a div {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    overflow: hidden;
 }
 
 .doublecolumn, .double2-1 {
@@ -853,122 +578,6 @@ footer {
 .doublecolumn > div {
     gap: 1em;
 }
-/* Üzenetek */
-
-.uzenetir {
-    display: grid;
-    grid-template-columns: 10ch 1fr;
-    width: clamp(300px, 60%, 100%);
-    gap: 1em;
-}
-
-.uzenetir textarea {
-    height: 20ch;
-    width: 60ch;
-}
-
-.uzenetek {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    width: clamp(300px, 95%, 100%);
-    gap: 1.5em;
-}
-
-.uzenet {
-    background-color: var(--uzenetbg);
-    padding: 10px 0px 5px 20px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    border-radius: 0.3em;
-}
-
-.uzenet p {
-    margin: 0.5em 1em 0 0;
-    text-align: justify;
-}
-
-.uzenet label {
-    font-weight: bold;
-    font-size: 1.5em;
-    padding-left: 0px;
-}
-
-.uzenetkomment {
-    display: flex;
-    justify-content: right;
-}
-
-.komment {
-    margin: 1em;
-    padding: 0.5em 1em;
-    width: 80%;
-    background-color: var(--adminreaktbg);
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    border-radius: 0.4em;
-}
-
-.komment p {
-    text-align: justify;
-}
-
-.uzenetujkomment {
-    display: grid;
-    justify-content: right !important;
-}
-
-.uzenetujkomment div {
-    padding: 0px 0px 0px 0px !important;
-}
-
-.hirek, .hirekfo {
-    width: 100%;
-    display: grid;
-}
-
-.hirekfo {
-    padding: 1.5em;
-    gap: 1em
-}
-
-.hirek {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5em;
-    align-content: start;
-}
-
-.hirek > div:first-child,
-.hirekfo > div:first-child {
-    grid-column: 1 / -1;
-}
-
-.hirfej a {
-    text-decoration: none;
-    color: inherit;
-}
-
-.hirtorzs {
-    height: 400px;
-    overflow: hidden;
-    position: relative;
-}
-
-.hirtorzs div {
-    height: 2.5em;
-    width: 100%;
-    bottom: 0;
-    content: "";
-    position: absolute;
-    background-image: var(--playerheadgrad);
-    -webkit-backdrop-filter: blur(2px);
-    backdrop-filter: blur(2px);
-}
-
-.hir img {
-    display: block;
-    margin: 0 auto;
-    height: clamp(200px, 350px, 100%);
-    width: clamp(100px, 400px, 100%);
-}
 
 .leftright {
     display: flex;
@@ -985,38 +594,24 @@ footer {
     text-align: right;
 }
 
-.jatekosoktable, .regulartable {
+.regulartable {
     justify-items: center;
 }
 
-.jatekosoktable tbody tr, .regulartable tbody tr,
-.jatekosoktable tfoot tr, .regulartable tfoot tr {
+.regulartable tbody tr, .regulartable tfoot tr {
     border-top: var(--footerborder) 1px solid;
 }
 
-.jatekosoktable thead tr, .regulartable thead tr {
+.regulartable thead tr {
     border-bottom: var(--footerborder) 1px solid;
 }
 
-.jatekosoktable tbody > tr:nth-child(odd),
 .regulartable tbody > tr:nth-child(odd) {
     background-color: var(--trocolor);
 }
 
-.jatekosoktable tbody > tr:nth-child(even),
 .regulartable tbody > tr:nth-child(even) {
     background-color: var(--trecolor);
-}
-
-.jatekosoktable td:first-child,
-.jatekosoktable th:first-child {
-    width: 66px;
-}
-
-.jatekosoktable td a,
-.jatekosoktable th {
-    height: 70px;
-    padding: 0.5em;
 }
 
 .regulartable td a,
@@ -1028,11 +623,75 @@ footer {
     padding: 0.3em 0.3em 0.3em inherit;
 }
 
-.jatekosoktable td a,
 .regulartable td a {
     display: flex;
     align-items: center;
     color: inherit;
+}
+
+.receptlista {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1em;
+}
+
+.receptelem {
+    display: flex;
+    flex-direction: row;
+    height: 9em;
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+}
+
+.receptelem:hover {
+    box-shadow: 0 8px 16px 4px rgba(0,0,0,0.2);
+}
+
+.receptelemkep {
+    height: 9em;
+    width: 16em;
+    overflow: hidden;
+}
+
+.receptelemkep img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.receptadatok {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5em;
+    height: 100%;
+}
+
+.receptadatok h2 {
+    font-size: 1.2em;
+    margin-top: 0;
+}
+
+.spreader {
+    flex-grow: 1;
+}
+
+.userinterakciok {
+    display: flex;
+    flex-direction: row;
+}
+
+.bookmarking {
+    height: 1.5em;
+}
+
+.bookmarking svg {
+    height: 1.5em;
+}
+
+.ertekeles {
+    display: flex;
+    flex-direction: row;
+    height: 1em;
+    align-self: flex-end;
 }
 
 .matchreel, .matchreelmatch {
@@ -1114,23 +773,6 @@ footer {
 .matchreelbott span:last-child {
     text-align: right;
 }
-
-.egyedilekerdezes {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1em;
-    background-color: var(--matchbg);
-    border: var(--matchborder) 1px solid;
-    border-radius: 0.3em;
-    padding: 1em 2em 0 2em;
-    margin-bottom: 1em;
-}
-
-.egyedilekerdezes > div:not(:last-child) {
-    display: flex;
-    flex-direction: column;
-}
-
 .submit {
     grid-column: 1 / -1;
     display: flex;
@@ -1163,11 +805,6 @@ footer {
 .socials img:hover {
     filter: sepia() hue-rotate(140deg) saturate(300%) brightness(0.4);
     cursor: pointer;
-}
-
-#disqus_thread {
-    grid-column: 1 / -1;
-    padding: 1em 2em;
 }
 
 @media (max-width: 600px) {
@@ -1336,20 +973,17 @@ footer {
     width: 1.8em;
     border-radius: 50%;
 }
-  
-/* On mouse-over, add a grey background color */
+
 .customcb:hover input ~ .customcbjelolo,
 .customcb:hover input ~ .customradiojelolo {
     background-color: var(--matchcimke);
 }
-  
-/* When the checkbox is checked, add a blue background */
+
 .customcb input:checked ~ .customcbjelolo,
 .customcb input:checked ~ .customradiojelolo {
     background-color: var(--cbchecked);
 }
 
-/* Create the checkmark/indicator (hidden when not checked) */
 .customcbjelolo:after,
 .customradiojelolo:after {
     content: "";
@@ -1357,7 +991,6 @@ footer {
     border: solid var(--bodyfont);
 }
 
-/* Style the checkmark/indicator */
 .customcbjelolo:after {
     visibility: hidden;
     left: 0.2em;
@@ -1381,7 +1014,6 @@ footer {
     transition: 100ms transform ease-in-out;
 }
 
-/* Show the checkmark when checked */
 .customcb input:checked ~ .customcbjelolo:after {
     visibility: visible;
 }
