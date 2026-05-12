@@ -5,7 +5,7 @@ namespace Kaloriafalo\Classes;
 class FeltoltesHandler
 {
     private array $mediatypes;
-    private bool $eleresiut = false;
+    private string|bool $eleresiut = false;
     private string $tipus;
     private int $uid;
     private MySQLHandler $sql;
@@ -14,13 +14,16 @@ class FeltoltesHandler
     {
         $this->mediatypes = $mediatypes;
         $this->sql = new MySQLHandler();
-        $this->sql->Prepare("INSERT INTO feltoltesek (fajl, felhasznalo_id, tipus) VALUES (?, ?, ?)");
         $this->sql->StartTransaction();
+        $this->sql->Prepare("INSERT INTO feltoltesek (fajl, felhasznalo_id, tipus) VALUES (?, ?, ?)");
         $this->uid = $uid;
         $this->eleresiut = $this->SetPath($gyokermappa, $egyedimappa);
         $this->tipus = $tipus;
     }
-    public  function Feltoltes($fajlok) : array|bool {
+    public function Feltoltes($fajlok) : array {
+        if(!$this->eleresiut)
+            return ['eredmeny' => false, 'hibalista' => 'Hibás elérési út!', 'uploadids' => null];
+
         $masoltfajlok = array(); $hibalista = array(); $uploadids = array();
         $sikeresfeltoltes = false;
 
@@ -36,14 +39,15 @@ class FeltoltesHandler
                 $ujfajlnev = $name . bin2hex(random_bytes(8)) . '.' . $ext;
 
                 $finalfile = $this->eleresiut . $ujfajlnev;
+                $fullpath = ROOT_DIR . $finalfile;
                 try {
-                    move_uploaded_file($fajl['tmp_name'], $finalfile);
+                    move_uploaded_file($fajl['tmp_name'], $fullpath);
                 }
                 catch (\Exception $e) {
                     $hibalista[] = $e->getMessage();
                 }
 
-                if(!file_exists($finalfile))
+                if(!file_exists($fullpath))
                     $sikeresfeltoltes = false;
                 else {
                     $this->sql->Run($finalfile, $this->uid, $this->tipus);
@@ -95,17 +99,23 @@ class FeltoltesHandler
             Helpers::StrContainsAny($gyokermappa, '..', '/', '\\', ':', '*', '?', '"', '<', '>', '|'))
             return false;
 
+        $mappakeszit = false;
         $feltoltesimappa = $GLOBALS['UPLOAD_FOLDER'] . $gyokermappa . '/' . $egyedimappa . '/';
+        $fullpath = ROOT_DIR . $feltoltesimappa;
 
-        if(!file_exists($feltoltesimappa)) {
-            mkdir($feltoltesimappa, 0755, true);
+        if(!file_exists($fullpath)) {
+            $mappakeszit = true;
+            mkdir($fullpath, 0755, true);
         }
 
-        $baseDir = rtrim(realpath($GLOBALS['UPLOAD_FOLDER']), '/') . '/';
-        $target = rtrim(realpath($feltoltesimappa), '/') . '/';
+        $baseDir = rtrim(realpath(ROOT_DIR . $GLOBALS['UPLOAD_FOLDER']), '/');
+        $target = rtrim(realpath($fullpath), '/');
 
-        if (!str_starts_with($target, $baseDir))
+        if (!str_starts_with($target, $baseDir)) {
+            if($mappakeszit)
+                unlink($fullpath);
             return false;
+        }
 
         return $feltoltesimappa;
     }
@@ -126,7 +136,6 @@ class FeltoltesHandler
         else {
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
             $mime = finfo_file($finfo, $fajl['tmp_name']);
-            finfo_close($finfo);
             if (!in_array($mime, $mediatypes, true)) {
                 $hiba = "A fájl típusa nem megengedett: " . $fajl['name'] . " A feltöltött MIME-ja: " . $mime;
                 $valid = false;
