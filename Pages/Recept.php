@@ -19,7 +19,7 @@ class Recept extends Page
     protected string $viewsgyoker = __DIR__ . "/views/recept/";
     protected bool $irasjog = false;
     protected array $jsfiles = [];
-    
+
     protected FormBuilder $form;
     protected array $views = [
         'recept' => 'recept.php',
@@ -58,8 +58,8 @@ class Recept extends Page
                 return new Recept('receptek');
 
             $this->recept = ReceptDB::GetRecept($params['elemid']);
-            if($params['method'] == 'szerkeszt' && Settings::$uid && $this->GetIrasjog($params['elemid'])) {
-                $this->irasjog = true;
+            $this->irasjog = $this->GetIrasjog($this->recept['recept_id'] ?? null);
+            if($params['method'] == 'szerkeszt' && Settings::$uid && $this->irasjog) {
                 $this->muvelet = 'szerkeszt';
                 $this->form = $this->Form('szerkeszt');
                 $this->view = $this->views['szerkeszt'];

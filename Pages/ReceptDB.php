@@ -62,8 +62,22 @@ class ReceptDB
     }
 
     public static function GetReceptek() : array {
-        $receptek = new MySQLHandler("SELECT * FROM receptek;");
-        return $receptek->EscapedArray('recept_szoveg');
+        $receptek = new MySQLHandler("SELECT recept_nev, lathatosag, receptek.recept_id AS recept_id,
+                    slug, cukor, gluten, laktoz, fajl AS kepurl,
+                    AVG(recept_ertekelesek.ertekeles) AS ertekeles,
+                    COUNT(recept_ertekelesek.ertekeles) AS ertekelesek_szama,
+                    IF(szakacskonyvrecept_id, 1, 0) AS mentve
+                FROM receptek
+                    LEFT JOIN recept_ertekelesek ON recept_ertekelesek.recept_id = receptek.recept_id
+                    LEFT JOIN recept_kepek ON recept_kepek.recept_id = receptek.recept_id
+                    LEFT JOIN feltoltesek ON feltoltesek.feltoltes_id = recept_kepek.feltoltes_id
+                    LEFT JOIN szakacskonyv_receptek ON szakacskonyv_receptek.recept_id = receptek.recept_id
+                    LEFT JOIN szakacskonyvek ON szakacskonyv_receptek.szakacskonyv_id = szakacskonyvek.szakacskonyv_id
+                WHERE (lathatosag = 1 OR lathatosag = 0 AND receptek.felhasznalo_id = ?)
+                    AND (recept_kepek.elsodleges IS NULL OR recept_kepek.elsodleges = 1)
+                    AND (szakacskonyvrecept_id IS NULL OR szakacskonyvek.felhasznalo_id = ?)
+                GROUP BY receptek.recept_id;", Settings::$uid, Settings::$uid);
+        return $receptek->EscapedArray();
     }
 
     public static function GetReceptIrasjog(int $felhasznalo_id, int $elem_id) : bool {
