@@ -1,5 +1,4 @@
 <?php
-define("ROOT_DIR", __DIR__);
 // Alap includolások
 require('./includes/config.inc.php');
 require('./includes/autoload.inc.php');
@@ -12,8 +11,9 @@ use Kaloriafalo\Classes\Logging;
 use Kaloriafalo\Classes\Oldalgyujto;
 use Kaloriafalo\Classes\Settings;
 
+define("ROOT_DIR", __DIR__);
 define("DEBUG_MODE", true);
-define("ROOT_PATH", $RootPath);
+define("ROOT_PATH", $GLOBALS['RootPath']);
 $uid = null;
 $dbcallcount = 0;
 
@@ -64,7 +64,7 @@ if(isset($_GET['page']) && $_GET['page'] == "kilepes")
 	session_unset();
 	session_destroy();
 	setcookie(session_name(), '', time() - 3600, '/');
-	header("Location: $RootPath");
+	header("Location: " . ROOT_PATH);
 	exit;
 }
 
@@ -118,8 +118,8 @@ else
 // Alap script fájlok hozzáadása
 Settings::$jsfiles[] = "includes/external/sweetalert/sweetalert2.all.min.js";
 Settings::$jsfiles[] = "Pages/views/_assets/js/sitefunctions.js";
-Settings::$PHPvarsToJS['nonce'] = $nonce;
-Settings::$PHPvarsToJS['RootPath'] = $RootPath;
+Settings::$PHPvarsToJS['csrf_token'] = $_SESSION['csrf_token'];
+Settings::$PHPvarsToJS['RootPath'] = ROOT_PATH;
 
 // Oldal megjelenítése
 $controller = new Controller();

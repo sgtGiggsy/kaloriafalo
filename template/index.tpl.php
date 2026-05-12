@@ -6,9 +6,9 @@ namespace Kaloriafalo\template;
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="<?=$RootPath?>/template/style.css?v=2.37" type="text/css">
-	<link rel="stylesheet" href="<?=$RootPath?>/includes/external/sweetalert/sweetalert2.min.css" type="text/css">
-    <link rel="shortcut icon" href="<?=$RootPath?>/favicon.ico" type="image/x-icon">
+	<link rel="stylesheet" href="<?=ROOT_PATH?>/template/style.css?v=2.37" type="text/css">
+	<link rel="stylesheet" href="<?=ROOT_PATH?>/includes/external/sweetalert/sweetalert2.min.css" type="text/css">
+    <link rel="shortcut icon" href="<?=ROOT_PATH?>/favicon.ico" type="image/x-icon">
 	<!-- Facebook Open Graph rész -->
     <?php
     /** @var Controller $page */
@@ -16,15 +16,15 @@ namespace Kaloriafalo\template;
 </head>
 
 <body>
-    <!-- Fejléc -->
-    <header><?php
-		include("./template/header.tpl.php");
-	?></header>
-
     <!-- Menü -->
     <nav class="mainmenu" id="mainmenu"><?php
         include("./template/menu.tpl.php");
 	?></nav>
+
+    <!-- Fejléc -->
+    <header><?php
+        $page->RenderHeader();
+    ?></header>
 
     <!--Tartalom-->
     <main><?php
