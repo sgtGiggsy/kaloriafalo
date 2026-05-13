@@ -14,6 +14,7 @@ class Hutoszekreny extends Page
     ];
     protected ?array $hutoszekreny = null;
     protected string $viewsgyoker = __DIR__ . "/views/hutoszekreny/";
+    protected array $elerhetoreceptek;
     protected array $jsfiles = ['Pages/views/hutoszekreny/assets/listautocomplete.js'];
     protected FormBuilder $form;
     protected array $views = [
@@ -30,6 +31,7 @@ class Hutoszekreny extends Page
 
             if($sajathuto) {
                 $this->hutoszekreny = $this->SajatHuto();
+                $this->elerhetoreceptek = HutoszekrenyDB::ReceptlistByTartalom($this->hutoszekreny['huto']['huto_id']);
                 $this->irasjog = true;
 
                 if($params['method'] == 'szerkeszt') {
@@ -56,6 +58,7 @@ class Hutoszekreny extends Page
                 return new SinglePage("404");
 
             $this->irasjog = true;
+            $this->elerhetoreceptek = HutoszekrenyDB::ReceptlistByTartalom($params['elemid']);
             if($params['method'] == 'szerkeszt') {
                 $this->muvelet = 'szerkeszt';
                 $this->HutoSzerkeszt();

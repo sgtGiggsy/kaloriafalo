@@ -45,8 +45,11 @@ class Helpers
         return date('Y-m-d H:i:s', $timestamp);
     }
 
-    public static function SQLTimeStampToDate(?string $timestamp = null) {
-        return date('Y-m-d', strtotime($timestamp));
+    public static function SQLTimeStampToDate(?string $timestamp = null, bool $nice = false) {
+        if(!$nice)
+            return date('Y-m-d', strtotime($timestamp));
+        else
+            return date('Y m d.', strtotime($timestamp));
     }
 
     public static function ArrayKeyLetezik(array $array, string ...$keys): bool {
@@ -114,8 +117,10 @@ class Helpers
         return $ujslug;
     }
 
-    public static function RenderArrayAsTable(array $array, ?string $link = null, ?string $linkid = null) : void {
-        ?><table>
+    public static function RenderArrayAsTable(array $array, ?string $link = null, ?string $linkid = null, ?string $tableclass = null) : void {
+        if($tableclass)
+            $tableclass = 'class="' . $tableclass . '"';
+        ?><table <?=$tableclass?>>
             <thead>
             <tr><?php
                 foreach(array_keys($array[0]) as $key)
@@ -203,6 +208,14 @@ class Helpers
         if(!str_contains($massalhangzok, $elsokarakter))
             $nevelo .= 'z';
         return $nevelo . ' ' . $szo;
+    }
+
+    public static function CellaLink($link, ...$szovegek)
+    {
+        foreach($szovegek as $szoveg)
+        {
+            ?><td><a href='<?=$link?>'><?=$szoveg?></a></td><?php
+        }
     }
 
     function MultiSelectDropdown(array $elements, array $selected, string $selectnev, string $label, ?int $selectid = null) {

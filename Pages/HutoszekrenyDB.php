@@ -45,7 +45,7 @@ class HutoszekrenyDB
     }
 
     public static function GetHutoszekrenyek() : array {
-        $hutok = new MySQLHandler("SELECT felhasznalok.usernev AS Felhasználó, huto_nev AS 'Hűtő neve', huto_id
+        $hutok = new MySQLHandler("SELECT null AS '', felhasznalok.usernev AS Felhasználó, huto_nev AS 'Hűtő neve', huto_id
             FROM hutoszekrenyek
                 INNER JOIN felhasznalok ON hutoszekrenyek.felhasznalo_id = felhasznalok.felhasznalo_id
             ORDER BY felhasznalok.usernev;");
@@ -58,6 +58,39 @@ class HutoszekrenyDB
             return false;
         else
             return true;
+    }
+
+    public static function ReceptlistByTartalom(int $huto_id) : array {
+        $receptlista = new MySQLHandler("SELECT receptek.recept_id, receptek.recept_nev,
+                    COUNT(recept_alapanyagok.alapanyag_id) AS osszes,
+                    SUM(hutoszekreny_tartalmak.alapanyag_id IS NULL) AS hianyzo_db,
+                    GROUP_CONCAT(
+                        CASE WHEN hutoszekreny_tartalmak.alapanyag_id IS NULL THEN alapanyagok.alapanyag_nev END
+                        SEPARATOR ', '
+                    ) AS hianyzo_nevek,
+                    GROUP_CONCAT(
+                        CASE WHEN hutoszekreny_tartalmak.alapanyag_id IS NULL THEN alapanyagok.alapanyag_id END
+                        SEPARATOR ', '
+                    ) AS hianyzo_idk
+                FROM receptek
+                    JOIN recept_alapanyagok ON recept_alapanyagok.recept_id = receptek.recept_id
+                    JOIN alapanyagok ON alapanyagok.alapanyag_id = recept_alapanyagok.alapanyag_id
+                    LEFT JOIN hutoszekreny_tartalmak ON hutoszekreny_tartalmak.alapanyag_id = recept_alapanyagok.alapanyag_id AND hutoszekreny_tartalmak.huto_id = ?
+                GROUP BY receptek.recept_id
+                ORDER BY hianyzo_db ASC
+                LIMIT 20;", $huto_id);
+        $receptlista = $receptlista->EscapedArray($huto_id);
+        foreach($receptlista as &$recept) {
+            $hianyzo = [];
+            $nevek = explode(', ', $recept['hianyzo_nevek']);
+            $idk = explode(', ', $recept['hianyzo_idk']);
+            $count = count($nevek);
+            for($i = 0; $i < $count; $i++) {
+                $hianyzo[] = ['alapanyag_nev' => $nevek[$i], 'alapanyag_id' => $idk[$i]];
+            }
+            $recept['hianyzo'] = $hianyzo;
+        }
+        return $receptlista;
     }
 
     public static function Szerkeszt(int $huto_id, ?string $huto_nev) : bool {
