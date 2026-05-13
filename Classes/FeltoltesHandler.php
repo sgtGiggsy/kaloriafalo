@@ -78,7 +78,7 @@ class FeltoltesHandler
         $result = [];
 
         if(!is_array($files['name'])) {
-            $fajlok[] = $files;
+            $result[] = $files;
         } else {
             foreach ($files['name'] as $i => $name) {
                 $result[$i] = [
