@@ -2,17 +2,16 @@
 
 namespace Kaloriafalo\Pages;
 
-use Cassandra\Set;
 use Kaloriafalo\Classes\FeltoltesHandler;
 use Kaloriafalo\Classes\FormBuilder;
 use Kaloriafalo\Classes\Helpers;
-use Kaloriafalo\Classes\MySQLHandler;
 use Kaloriafalo\Classes\Settings;
 
 class Recept extends Page
 {
     public string $cimke = "recept";
     public ?array $recept = null;
+    public string $keresesplaceholder = "Mit eszünk ma?";
     public array $apimethods = [
         'GET' => ['kereses' => 'ReceptFuzzyList',
             'receptkategoriak' => 'ReceptKategoriak'],
@@ -37,9 +36,9 @@ class Recept extends Page
     protected array $mediatypes = ['image/jpeg', 'image/bmp', 'image/png', 'image/webp'];
 
     public function Router(array $params) : Page {
-        $this->validpagemethods = ['uj', 'szerkeszt'];
+        $this->validpagemethods = ['uj', 'szerkeszt', 'kereses'];
         $params = $this->ParseGet($params);
-        if($this->selectedpage == 'receptek' || $this->selectedpage == 'recept') {
+        if($this->selectedpage == 'receptek' || $this->selectedpage == 'recept' || $this->selectedpage == 'szakacskonyv') {
             $this->jsfiles[] = 'Pages/views/recept/assets/quickactions.js';
         }
         if($this->selectedpage == 'recept') {
@@ -66,7 +65,7 @@ class Recept extends Page
                 return new Recept('receptek');
 
             $this->recept = ReceptDB::GetRecept($params['elemid']);
-            $this->irasjog = $this->GetIrasjog($this->recept['recept_id'] ?? null);
+            $this->irasjog = $this->GetIrasjog($this->recept['recept']['recept_id']);
             if($params['method'] == 'szerkeszt' && Settings::$uid && $this->irasjog) {
                 $this->muvelet = 'szerkeszt';
                 $this->form = $this->Form('szerkeszt');
@@ -83,13 +82,23 @@ class Recept extends Page
         }
 
         if($this->selectedpage == 'receptek') {
-            $this->recept = ReceptDB::GetReceptek();
+            $this->jsfiles[] = 'Pages/views/recept/assets/kereses.js';
+            $kereses = null;
+            if(isset($params['method']) && isset($params['elemid']) && $params['method'] == 'kereses')
+                $kereses = $params['elemid'];
+
+            if(!$kereses)
+                $this->recept = ReceptDB::GetReceptek();
+            else {
+                $this->recept = $this->ReceptKereses($kereses);
+                $this->keresesplaceholder = $kereses;
+            }
             $this->view = $this->views['receptek'];
             return $this;
         }
 
         if($this->selectedpage == 'szakacskonyv' && Settings::$uid) {
-            //TODO megírni a szakácskönyv adatbázis részt
+            $this->recept = ReceptDB::GetSzakacskonyv(Settings::$uid);
             $this->view = $this->views['szakacskonyv'];
             return $this;
         }
@@ -176,6 +185,8 @@ class Recept extends Page
         $form = (new FormBuilder())
             ->TextBox('recept_szoveg', 'Recept szövege')
             ->Number('adagmeret', 'Adag (Hány főre elég?)')
+            ->Number('elokeszuletek', 'Mennyi ideig tart a főzés/sütés előkészítse?')
+            ->Number('sutesido', 'Mennyi a főzés/sütés ideje?')
             ->Checkbox('lathatosag', 'Recept látható nyilvánosan');
         if($muvelet == 'szerkeszt' && $recept != null && $this->GetIrasjog($recept['recept_id'])) {
             $form->Hidden('slug')
@@ -184,7 +195,9 @@ class Recept extends Page
                 ->SetValue('recept_id', $recept['recept_id'])
                 ->SetValue('adagmeret', $recept['adagmeret'])
                 ->SetValue('recept_szoveg', $recept['recept_szoveg'])
-                ->SetValue('lathatosag', $recept['lathatosag']);
+                ->SetValue('lathatosag', $recept['lathatosag'])
+                ->SetValue('elokeszuletek', $recept['elokeszuletek'])
+                ->SetValue('sutesido', $recept['sutesido']);
         }
         return $form;
     }
@@ -226,8 +239,6 @@ class Recept extends Page
         else
             return false;
     }
-
-
 
     private function ParseAlapanyagok(?array $alapanyagok) : array {
         if(!$alapanyagok)
@@ -300,6 +311,16 @@ class Recept extends Page
         return false;
     }
 
+    private function ReceptKereses(string $needle) : array {
+        $searcharr = Helpers::FuzzySearchStringGen($needle);
+
+        $firstpass = ReceptDB::GetReceptekFuzzy($searcharr, 'recept_id');
+        if(count($firstpass) == 0)
+            return [];
+
+        return Helpers::FuzzySearch($firstpass, $needle, 'recept_nev');
+    }
+
     public function Bookmark() : array|bool {
         if(!isset($_POST['recept_id']))
             return false;
@@ -308,8 +329,14 @@ class Recept extends Page
             return false;
 
         $eredmeny = ReceptDB::BookmarkRecept($_POST['recept_id'], Settings::$uid);
-        $data['eredmeny'] = $eredmeny;
-        $data['message'] = $eredmeny ? 'A recept mentése sikeres volt' : 'A recept mentése nem sikerült!';
+        if($eredmeny === null) {
+            $data['eredmeny'] = true;
+            $data['message'] = 'A recept eltávolításra került a Szakácskönyvedből!';
+        }
+        else {
+            $data['eredmeny'] = $eredmeny;
+            $data['message'] = $eredmeny ? 'A recept mentése sikeres volt' : 'A recept mentése nem sikerült!';
+        }
 
         return $data;
     }

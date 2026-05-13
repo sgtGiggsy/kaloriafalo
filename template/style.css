@@ -40,6 +40,7 @@
     --matchborder: #e3e3e3;
     --matchcimke: #cdcdcd;
     --cbchecked: #454545;
+    --shadow: #ccc;
 }
 
 *, *:before, *:after {
@@ -78,13 +79,11 @@ a {
 }
 
 .normalcontent {
+    margin-top: 1.5em;
     display: flex;
     flex-direction: column;
-}
-
-.normalcontent {
     overflow-x: hidden;
-    width: clamp(350px, 60%, 100%);
+    width: clamp(350px, 80%, 100%);
 }
 
 .normalcontent, .admin {
@@ -558,11 +557,21 @@ footer {
     grid-template-columns: 1fr 1fr;
 }
 
+.hutolehetosegek {
+    display: flex;
+    flex-direction: column;
+}
+
+.hutolehetosegek h3, .hutolehetosegek span {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
 .double2-1 {
     grid-template-columns: 2fr 1fr;
 }
 
-.doublecolumn > :last-child {
+.doublecolumn > :first-child {
     grid-column: 1 / -1;
 }
 
@@ -614,6 +623,18 @@ footer {
     background-color: var(--trecolor);
 }
 
+.regulartable tbody tr > td:first-child {
+    width: 50px;
+    padding: 0.3em;
+}
+
+.regulartable tbody tr > td:first-child a {
+    border-radius: 50%;
+    overflow: hidden;
+    width: 45px;
+    height: 45px;
+}
+
 .regulartable td a,
 .regulartable th {
     height: 40px;
@@ -633,6 +654,34 @@ footer {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1em;
+}
+
+.kereses {
+    display: flex;
+    flex-direction: row;
+    background-color: var(--footerbg);
+    padding: 3em;
+    justify-content: center;
+}
+
+.kereses input {
+    width: 30ch;
+    height: 3.5em;
+    padding: 1em;
+    border: none;
+    border-radius: 0;
+}
+
+.kereses input[type="text"]:focus {
+    outline-style: ridge;
+    outline-color: var(--mainmenubg);
+    box-shadow: inset 0 0 8px 2px var(--shadow);
+}
+
+.kereses input[type="submit"] {
+    margin-left: 1em;
+    width: 10ch;
+    background-color: var(--mainmenubg);
 }
 
 .receptelem {
@@ -656,6 +705,14 @@ footer {
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+.anchbutton {
+    padding: 0.5em 1em;
+    background-color: var(--footerbg);
+    color: var(--footerfont);
+    margin-bottom: 1em;
+    width: fit-content;
 }
 
 .receptadatok {
@@ -685,6 +742,16 @@ footer {
 
 .bookmarking svg {
     height: 1.5em;
+}
+
+.bookmark {
+    display: none;
+    visibility: hidden;
+}
+
+.active {
+    display: block;
+    visibility: visible;
 }
 
 .ertekeles {
@@ -840,7 +907,7 @@ footer {
         padding: 0.3em;
     }
 
-    .jatekosoktable, .regulartable {
+    .regulartable {
         width: 90vw;
         font-size: 0.7em;
     }
@@ -901,17 +968,6 @@ footer {
         grid-template-columns: 3fr 1fr;
     }
 }
-
-.kattinthatotr{
-    cursor:pointer;
-    color: #000;
-    font-weight: bold;
-    }
-
-#kattinthatotr{
-    cursor:pointer;
-}
-
 
 /* EGYEDI CHECKBOX */
 .customcbwrapper {
@@ -1074,4 +1130,29 @@ footer {
 .alapanyag-sor {
     position: relative;
     margin-bottom: 5px;
+}
+
+.profilcard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1em;
+    box-shadow: 0 0 2px var(--shadow);
+    border-radius: 2em;
+    padding: 1.5em;
+}
+
+.profilkep {
+    display: flex;
+    align-items: center;
+}
+
+.imgrightsep {
+    border-right: var(--shadow) 1px solid;
+    padding-right: 1.5em;
+}
+
+.imgrightsep img {
+    border-radius: 50%;
+    overflow: hidden;
+    width: clamp(120px, 250px, 300px);
 }

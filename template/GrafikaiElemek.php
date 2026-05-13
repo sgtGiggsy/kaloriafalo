@@ -12,8 +12,8 @@ class GrafikaiElemek
         'telicsillag' => '<svg class="csillag" data-ertek="%s" data-receptid="%s" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="m233-120 65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Z"/></svg>',
         'felcsillag' => '<svg class="csillag" data-ertek="%s" data-receptid="%s" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="m606-286-33-144 111-96-146-13-58-136v312l126 77ZM233-120l65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Z"/></svg>',
         'urescsillag' => '<svg class="csillag" data-ertek="%s" data-receptid="%s" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="m354-287 126-76 126 77-33-144 111-96-146-13-58-136-58 135-146 13 111 97-33 143ZM233-120l65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Zm247-350Z"/></svg>',
-        'bookmark' => '<svg class="bookmark" data-receptid="%s" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/></svg>',
-        'bookmark_filled' => '<svg class="bookmark" data-receptid="%s" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Z"/></svg>'
+        'bookmark' => '<svg class="bookmark %s" data-receptid="%s" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/></svg>',
+        'bookmark_filled' => '<svg class="bookmark %s" data-receptid="%s" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Z"/></svg>'
     ];
 
     public static function Ertekeles(?float $ertek, ?int $elem_id = 0) : void {

@@ -11,17 +11,20 @@ class ReceptDB
                     slug, cukor, gluten, laktoz, fajl AS kepurl,
                     AVG(recept_ertekelesek.ertekeles) AS ertekeles,
                     COUNT(recept_ertekelesek.ertekeles) AS ertekelesek_szama,
-                    IF(szakacskonyvrecept_id, 1, 0) AS mentve
+                    SUM(IF(szakacskonyvek.felhasznalo_id = ?, 1, 0)) AS mentve
                 FROM receptek
                     LEFT JOIN recept_ertekelesek ON recept_ertekelesek.recept_id = receptek.recept_id
                     LEFT JOIN recept_kepek ON recept_kepek.recept_id = receptek.recept_id
                     LEFT JOIN feltoltesek ON feltoltesek.feltoltes_id = recept_kepek.feltoltes_id
                     LEFT JOIN szakacskonyv_receptek ON szakacskonyv_receptek.recept_id = receptek.recept_id
                     LEFT JOIN szakacskonyvek ON szakacskonyv_receptek.szakacskonyv_id = szakacskonyvek.szakacskonyv_id";
-    private static string $alap_lista_query_where = " WHERE (lathatosag = 1 OR lathatosag = 0 AND receptek.felhasznalo_id = ?)
+    private static string $alap_lista_query_where = " WHERE (lathatosag = 1 OR (lathatosag = 0 AND receptek.felhasznalo_id = ?))
+                    AND (recept_kepek.elsodleges IS NULL OR recept_kepek.elsodleges = 1)";
+
+    private static string $szakacskonyv_lista_query_where = " WHERE (lathatosag = 1 OR lathatosag = 0 AND receptek.felhasznalo_id = ?)
                     AND (recept_kepek.elsodleges IS NULL OR recept_kepek.elsodleges = 1)
-                    AND (szakacskonyvrecept_id IS NULL OR szakacskonyvek.felhasznalo_id = ?)
-                    GROUP BY receptek.recept_id";
+                    AND szakacskonyvek.felhasznalo_id = ?";
+
     private static string $alap_lista_query_order = " ORDER BY ertekeles DESC;";
     public static function UjRecept(string $recept_nev, string $recept_szoveg, int $lathatosag, $slug, ?string $adagmeret, array $alapanyagok, ?int $elokeszuletek, ?int $sutesido, int $uid) : int|bool {
         $sikeresdb = true;
@@ -80,12 +83,22 @@ class ReceptDB
         }
     }
 
-    public static function BookmarkRecept(int $recept_id, int $felhasznalo_id) : bool {
+    public static function BookmarkRecept(int $recept_id, int $felhasznalo_id) : ?bool {
+        $ret = false;
         $szakacskonyv_id = ReceptDB::GetSzakacskonyvId($felhasznalo_id);
         $bookmark = new MySQLHandler();
-        $bookmark->Prepare("INSERT INTO szakacskonyv_receptek (recept_id, szakacskonyv_id) VALUES (?, ?);");
-        $bookmark->Run($recept_id, $szakacskonyv_id);
-        return $bookmark->siker;
+        $bookmark->Query('DELETE FROM szakacskonyv_receptek WHERE recept_id = ? AND szakacskonyv_id = ?;', $recept_id, $szakacskonyv_id);
+        $ret = $bookmark->siker;
+        if($bookmark->affectedrows == 0) {
+            $bookmark->Prepare("INSERT INTO szakacskonyv_receptek (recept_id, szakacskonyv_id)
+                VALUES (?, ?);");
+            $bookmark->Run($recept_id, $szakacskonyv_id);
+            $ret = $bookmark->siker;
+        } else {
+            $ret = null;
+        }
+
+        return $ret;
     }
 
     public static function GetSzakacskonyvId(int $felhasznalo_id) : ?int {
@@ -96,9 +109,16 @@ class ReceptDB
             return $bookmark->Fetch()['szakacskonyv_id'];
     }
 
+    public static function UjSzakacskonyv(int $felhasznalo_id) : bool {
+        $szakacskonyv = new MySQLHandler();
+        $szakacskonyv->Prepare("INSERT INTO szakacskonyvek (felhasznalo_id) VALUES (?);");
+        $szakacskonyv->Run($felhasznalo_id);
+        return $szakacskonyv->siker;
+    }
+
     public static function GetRecept(string $slug) : ?array {
         $recept = new MySQLHandler("SELECT recept_nev, recept_szoveg, receptek.letrehozas_ideje, slug, elokeszuletek, sutesido, lathatosag, adagmeret,
-                    receptek.cukor AS cukor, receptek.gluten AS gluten, receptek.laktoz AS laktoz, receptek.recept_id, receptek.felhasznalo_id,
+                    receptek.cukor AS cukor, receptek.gluten AS gluten, receptek.laktoz AS laktoz, receptek.recept_id, receptek.felhasznalo_id, receptek.recept_id AS recept_id,
                     AVG(recept_ertekelesek.ertekeles) AS ertekeles,
                     COUNT(recept_ertekelesek.ertekeles) AS ertekelesek_szama,
                     IF(szakacskonyvrecept_id, 1, 0) AS mentve
@@ -128,12 +148,26 @@ class ReceptDB
     }
 
     public static function GetReceptek() : array {
-        $receptek = new MySQLHandler(self::$alap_lista_query . self::$alap_lista_query_where . self::$alap_lista_query_order, Settings::$uid, Settings::$uid);
+        $receptek = new MySQLHandler();
+        $receptek->Prepare(self::$alap_lista_query . self::$alap_lista_query_where . ' GROUP BY receptek.recept_id' . self::$alap_lista_query_order);
+        $receptek->Run(Settings::$uid, Settings::$uid);
+
         return $receptek->EscapedArray();
     }
 
-    public static function GetSzakacskonyv() : array {
-        $receptek = new MySQLHandler(self::$alap_lista_query . self::$alap_lista_query_where . self::$alap_lista_query_order, Settings::$uid, Settings::$uid);
+    public static function GetReceptekFuzzy(array $searcharr, string $column_name) : array {
+        $receptek = new MySQLHandler();
+        // Tudom, hogy ezzel csökkentem a prepared statement biztonságát, de egyrészt a Settings:$uid értéke
+        // nem user-től érkezik, másrészt a GetFuzzyList függvényt komolyabban módosítani kellene,
+        // hogy kezelni tudjon egynél több változót, és erre most nincs időm.
+        $where = str_replace('?', Settings::$uid, self::$alap_lista_query_where);
+        $alapquery = str_replace('?', Settings::$uid, self::$alap_lista_query);
+        $receptek->Prepare($alapquery . $where . ' AND recept_nev LIKE ? GROUP BY receptek.recept_id' . self::$alap_lista_query_order);
+        return $receptek->GetFuzzyList($searcharr, $column_name);
+    }
+
+    public static function GetSzakacskonyv(string $uid) : array {
+        $receptek = new MySQLHandler(self::$alap_lista_query . self::$szakacskonyv_lista_query_where . ' GROUP BY receptek.recept_id' . self::$alap_lista_query_order, Settings::$uid, Settings::$uid, Settings::$uid);
         return $receptek->EscapedArray();
     }
 
