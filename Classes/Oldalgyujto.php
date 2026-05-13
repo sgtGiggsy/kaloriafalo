@@ -74,7 +74,7 @@ class Oldalgyujto
         'beallitasok' => [
             'menupont' => 'Beállítások',
             'lathatosag' => 'adminok',
-            'menuben' => true,
+            'menuben' => false,
             'sorrend' => 61,
             'szulo' => 'adminisztracio',
             'ikon' => null,
@@ -95,7 +95,7 @@ class Oldalgyujto
             'szulo' => 'felhasznalo',
             'ikon' => null,
             'handler' => Felhasznalo::class],
-        'profilszerkesztes' => [
+        'profil/szerkesztes' => [
             'menupont' => 'Beállítások',
             'lathatosag' => 'tagok',
             'menuben' => true,
