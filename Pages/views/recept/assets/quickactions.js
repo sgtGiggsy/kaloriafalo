@@ -16,7 +16,7 @@ bookmarks.forEach(bookmark => {
         .then(response => response.json())
         .then(data => {
             let icon = 'success'
-            let message = 'Recept sikeresen mentve a Szakácskönyvbe'
+            let message = data.data.message
             let title = 'Siker'
             if(!data.success) {
                 icon = 'error'
@@ -28,6 +28,12 @@ bookmarks.forEach(bookmark => {
                 text: message,
                 icon: icon
             });
+            if(data.success) {
+                let bookmarkicons = document.getElementById("bookmark-" + receptId);
+                bookmarkicons.querySelectorAll("svg").forEach(icon => {
+                    icon.classList.toggle("active");
+                });
+            }
         })
         .catch(error => {
             toaster.fire({
