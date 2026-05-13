@@ -27,6 +27,22 @@ class FormBuilder
         return $this;
     }
 
+    public function Email(string $name, string $label, bool $required = false): self {
+        if ($required)
+            $required = 'required';
+        else
+            $required = '';
+        $this->mezok[] = [
+            'type' => 'email',
+            'name' => $name,
+            'label' => $label,
+            'value' => null,
+            'required' => $required,
+            'step' => ''
+        ];
+        return $this;
+    }
+
     public function TextBox(string $name, string $label, bool $required = false): self {
         if ($required)
             $required = 'required';
@@ -133,6 +149,7 @@ class FormBuilder
                 $html .= '<label for="' . $mezo['name'] . '">' . htmlspecialchars($mezo['label']) . '</label>';
 
             switch ($mezo['type']) {
+                case 'email':
                 case 'text':
                 case 'number':
                 case 'hidden':

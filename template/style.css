@@ -1139,6 +1139,7 @@ footer {
     box-shadow: 0 0 2px var(--shadow);
     border-radius: 2em;
     padding: 1.5em;
+    margin-top: 0.2em;
 }
 
 .profilkep {
@@ -1155,4 +1156,6 @@ footer {
     border-radius: 50%;
     overflow: hidden;
     width: clamp(120px, 250px, 300px);
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
 }
