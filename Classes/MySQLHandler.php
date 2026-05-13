@@ -11,6 +11,7 @@ class MySQLHandler
     public ?int $last_insert_id = null;
     public bool $siker = false;
     public int $sorokszama = 0;
+    public int $affectedrows = 0;
     private ?string $hibauzenet = null;
     private ?int $hibakod = null;
     private ?mysqli $con = null;
@@ -283,12 +284,13 @@ class MySQLHandler
                 }
 
                 @$GLOBALS['dbcallcount']++;
+                $this->affectedrows = $this->stmt->affected_rows;
                 $this->last_insert_id = mysqli_insert_id($this->con);
                 $this->result = $this->stmt->get_result();
 
                 if(!is_bool($this->result))
                     $this->sorokszama = mysqli_num_rows($this->result);
-                
+
                 if($this->con && mysqli_errno($this->con) != 0)
                     $this->hibakod = mysqli_errno($this->con);
                 else
