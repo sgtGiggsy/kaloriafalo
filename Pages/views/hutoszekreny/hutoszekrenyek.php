@@ -9,5 +9,5 @@ if (!defined('ROOT_PATH')) {
 }
 ?><div class="normalcontent">
     <h1>Felhasználók hűtőszekrényei</h1><?php
-    Helpers::RenderArrayAsTable($this->hutoszekreny, 'hutoszekreny', 'huto_id');
+    Helpers::RenderArrayAsTable($this->hutoszekreny, 'hutoszekreny', 'huto_id', 'regulartable');
 ?></div>

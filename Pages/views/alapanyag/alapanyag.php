@@ -10,7 +10,7 @@ if (!defined('ROOT_PATH')) {
     <h1><?=ucfirst($this->alapanyag['alapanyag_nev'])?></h1><?php
     if($this->irasjog) {
         $alapanyag = $this->alapanyag;
-        ?><a href="<?= ROOT_PATH . '/alapanyag/szerkeszt/' . $alapanyag['slug'] ?>">
+        ?><a class="anchbutton" href="<?= ROOT_PATH . '/alapanyag/szerkeszt/' . $alapanyag['slug'] ?>">
             Alapanyag szerkesztése
         </a><?php
     }

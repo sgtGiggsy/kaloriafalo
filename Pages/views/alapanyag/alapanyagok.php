@@ -11,7 +11,7 @@ if (!defined('ROOT_PATH')) {
     <h1>Alapanyagok listája</h1><?php
     $alapanyag = $this->alapanyag;
     if(Settings::$uid) {
-        ?><a href="<?= ROOT_PATH . '/alapanyag/uj' ?>">
+        ?><a class="anchbutton" href="<?= ROOT_PATH . '/alapanyag/uj' ?>">
             Új alapanyag felvitele
         </a><?php
     }

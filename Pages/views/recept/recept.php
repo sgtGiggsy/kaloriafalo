@@ -9,7 +9,7 @@ $alapanyagok = $this->recept['alapanyagok'];
 ?><div class="normalcontent">
     <h1><?=ucfirst($recept['recept_nev'])?></h1><?php
     if($this->irasjog) {
-        ?><a href="<?= ROOT_PATH . '/recept/szerkeszt/' . $recept['slug'] ?>">
+        ?><a class="anchbutton" href="<?= ROOT_PATH . '/recept/szerkeszt/' . $recept['slug'] ?>">
             Recept szerkesztése
         </a><?php
     }
