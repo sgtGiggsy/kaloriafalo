@@ -188,6 +188,7 @@ class Autentikacio extends Page
         if($ujuserid) {
             $regisztracio = true;
             HutoszekrenyDB::UjHutoszekreny($ujuserid);
+            ReceptDB::UjSzakacskonyv($ujuserid);
             $this->mixintext = "Sikeres regisztráció!";
             $this->redirtarget = ROOT_PATH . "/regisztracio/sikeres";
 
