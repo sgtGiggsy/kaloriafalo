@@ -18,10 +18,11 @@ class FelhasznaloDB
         return $felhasznalo->EscapedArray()[0];
     }
 
-    public static function GetFelhasznalok() : ?array {
+    public static function GetFelhasznalok(int $startindex = 0, int $dbszam = 20) : ?array {
         $felhasznalo = new MySQLHandler("SELECT usernev, email, teljesnev, fajl AS profilkep, felhasznalok.felhasznalo_id AS felhasznalo_id, szint, regisztracio, allapot
             FROM felhasznalok
-                LEFT JOIN feltoltesek ON felhasznalok.profilkep = feltoltesek.feltoltes_id;");
+                LEFT JOIN feltoltesek ON felhasznalok.profilkep = feltoltesek.feltoltes_id
+            LIMIT ?, ?;", $startindex, $dbszam);
         return $felhasznalo->EscapedArray();
     }
 

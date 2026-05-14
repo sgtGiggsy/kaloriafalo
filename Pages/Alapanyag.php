@@ -84,9 +84,13 @@ class Alapanyag extends Page
             $elemperoldal = 20;
             $startindex = 0;
             if($params['method'] == 'oldal' && isset($params['elemid'])){
+                if($params['elemid'] != 1)
+                    $startindex = ($params['elemid'] - 1) * $elemperoldal + 1;
                 $this->lapozas['elozo'] = ($params['elemid'] > 1) ? $params['elemid'] - 1 : null;
                 $this->lapozas['kovetkezo'] = $params['elemid'] + 1;
-                $startindex = $params['elemid'] * $elemperoldal;
+            }
+            else {
+                $this->lapozas['kovetkezo'] = 2;
             }
 
             $this->view = $this->views['alapanyagok'];

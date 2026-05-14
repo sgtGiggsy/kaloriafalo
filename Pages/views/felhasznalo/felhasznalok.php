@@ -28,4 +28,5 @@ if (!defined('ROOT_PATH') || !Settings::$admin) {
             }
         ?></tbody>
     </table>
+    <?=$this->Lapozo()?>
 </div>
