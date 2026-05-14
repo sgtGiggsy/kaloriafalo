@@ -15,10 +15,11 @@ class AlapanyagDB
             return $alapanyag->EscapedArray()[0];
     }
 
-    public static function GetAlapanyagok() : ?array {
+    public static function GetAlapanyagok(int $startindex = 0, int $dbszam = 20) : ?array {
         $alapanyag = new MySQLHandler("SELECT alapanyag_nev AS alapanyag, kaloria AS kalória, mertekegyseg AS mértékegység, szenhidrat AS szénhidrát, feherje AS fehérje, zsir AS zsír, IF(cukor, '*', '') AS cukor, IF(gluten, '*', '') AS glutén, IF(laktoz, '*', '') AS laktóz, slug, alapanyag_id
             FROM alapanyagok
-            ORDER BY alapanyag_nev;");
+            ORDER BY alapanyag_nev
+            LIMIT ?, ?;", $startindex, $dbszam);
         if($alapanyag->sorokszama == 0)
             return null;
         else

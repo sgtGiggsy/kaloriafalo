@@ -118,6 +118,8 @@ class Helpers
     }
 
     public static function RenderArrayAsTable(array $array, ?string $link = null, ?string $linkid = null, ?string $tableclass = null) : void {
+        if(count($array) == 0)
+            return;
         if($tableclass)
             $tableclass = 'class="' . $tableclass . '"';
         ?><table <?=$tableclass?>>

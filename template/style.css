@@ -1159,3 +1159,19 @@ footer {
     aspect-ratio: 1 / 1;
     object-fit: cover;
 }
+
+.leftright {
+    margin: 1em 0;
+    display: flex;
+    width: 100%;
+}
+
+.leftright div {
+    flex-grow: 1;
+    display: block;
+}
+
+.leftright :last-child:not(:only-child) {
+    justify-self: right;
+    text-align: right;
+}

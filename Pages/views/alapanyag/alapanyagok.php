@@ -16,4 +16,5 @@ if (!defined('ROOT_PATH')) {
         </a><?php
     }
     ?><?=Helpers::RenderArrayAsTable($this->alapanyag, 'alapanyag', 'slug');?>
+    <?=$this->Lapozo()?>
 </div>

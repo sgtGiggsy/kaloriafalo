@@ -38,7 +38,7 @@ class Alapanyag extends Page
     ];
 
     public function Router(array $params) : Page {
-        $this->validpagemethods = ['uj', 'szerkeszt'];
+        $this->validpagemethods = ['uj', 'szerkeszt', 'oldal'];
         $params = $this->ParseGet($params);
         if($this->selectedpage == 'alapanyag') {
             if($params['method'] == 'uj' && Settings::$uid) {
@@ -81,8 +81,24 @@ class Alapanyag extends Page
             }
         }
         elseif($this->selectedpage == 'alapanyagok') {
+            $elemperoldal = 20;
+            $startindex = 0;
+            if($params['method'] == 'oldal' && isset($params['elemid'])){
+                $this->lapozas['elozo'] = ($params['elemid'] > 1) ? $params['elemid'] - 1 : null;
+                $this->lapozas['kovetkezo'] = $params['elemid'] + 1;
+                $startindex = $params['elemid'] * $elemperoldal;
+            }
+
             $this->view = $this->views['alapanyagok'];
-            $this->alapanyag = AlapanyagDB::GetAlapanyagok();
+            $this->alapanyag = AlapanyagDB::GetAlapanyagok($startindex, $elemperoldal);
+
+            if(!$this->alapanyag) {
+                $this->alapanyag = [];
+            }
+
+            if(count($this->alapanyag) < $elemperoldal) {
+                $this->lapozas['kovetkezo'] = null;
+            }
         }
 
         return $this;
