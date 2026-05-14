@@ -51,28 +51,11 @@ class Felhasznalo extends Page
             if(!Settings::$admin)
                 return new SinglePage(403);
 
-            $elemperoldal = 20;
-            $startindex = 0;
-            if($params['method'] == 'oldal' && isset($params['elemid'])){
-                if($params['elemid'] != 1)
-                    $startindex = ($params['elemid'] - 1) * $elemperoldal + 1;
-                $this->lapozas['elozo'] = ($params['elemid'] > 1) ? $params['elemid'] - 1 : null;
-                $this->lapozas['kovetkezo'] = $params['elemid'] + 1;
-            }
-            else {
-                $this->lapozas['kovetkezo'] = 2;
-            }
-
-            $this->felhasznalo = FelhasznaloDB::GetFelhasznalok($startindex, $elemperoldal);
             $this->view = $this->views['felhasznalok'];
-
-            if(!$this->felhasznalo) {
-                $this->felhasznalo = [];
-            }
-
-            if(count($this->felhasznalo) < $elemperoldal) {
-                $this->lapozas['kovetkezo'] = null;
-            }
+            $startindex = 0;
+            $elemperoldal = 20;
+            $this->LapozasPrepare($startindex, $elemperoldal, $params);
+            $this->felhasznalo = $this->LapozasFinalize(FelhasznaloDB::GetFelhasznalok($startindex, $elemperoldal), $elemperoldal);
         }
 
         return $this;

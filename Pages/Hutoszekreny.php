@@ -71,8 +71,12 @@ class Hutoszekreny extends Page
             return $this;
         }
         elseif($this->selectedpage == 'hutoszekrenyek' && Settings::$admin) {
+            $this->view = $this->views['hutoszekrenyek'];
             $this->irasjog = true;
-            $this->Hutoszkerenylista();
+            $startindex = 0;
+            $elemperoldal = 20;
+            $this->LapozasPrepare($startindex, $elemperoldal, $params);
+            $this->hutoszekreny = $this->LapozasFinalize(HutoszekrenyDB::GetHutoszekrenyek($startindex, $elemperoldal), $elemperoldal);
             return $this;
         }
         else
@@ -143,11 +147,6 @@ class Hutoszekreny extends Page
             $this->form = $this->Form('szerkeszt', $this->hutoszekreny);
             $this->view = $this->views['szerkeszt'];
         }
-    }
-
-    private function Hutoszkerenylista() : void {
-        $this->view = $this->views['hutoszekrenyek'];
-        $this->hutoszekreny = HutoszekrenyDB::GetHutoszekrenyek();
     }
 
     public function GetIrasjog(int|string|null|bool $elem_id) : bool {

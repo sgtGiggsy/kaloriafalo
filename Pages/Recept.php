@@ -88,26 +88,10 @@ class Recept extends Page
                 $kereses = $params['elemid'];
 
             if(!$kereses) {
-                $elemperoldal = 20;
                 $startindex = 0;
-                if($params['method'] == 'oldal' && isset($params['elemid'])){
-                    if($params['elemid'] != 1)
-                        $startindex = ($params['elemid'] - 1) * $elemperoldal + 1;
-                    $this->lapozas['elozo'] = ($params['elemid'] > 1) ? $params['elemid'] - 1 : null;
-                    $this->lapozas['kovetkezo'] = $params['elemid'] + 1;
-                }
-                else {
-                    $this->lapozas['kovetkezo'] = 2;
-                }
-
-                $this->recept = ReceptDB::GetReceptek($startindex, $elemperoldal);
-                if(!$this->recept) {
-                    $this->recept = [];
-                }
-
-                if(count($this->recept) < $elemperoldal) {
-                    $this->lapozas['kovetkezo'] = null;
-                }
+                $elemperoldal = 20;
+                $this->LapozasPrepare($startindex, $elemperoldal, $params);
+                $this->recept = $this->LapozasFinalize(ReceptDB::GetReceptek($startindex, $elemperoldal), $elemperoldal);
             }
             else {
                 $this->recept = $this->ReceptKereses($kereses);

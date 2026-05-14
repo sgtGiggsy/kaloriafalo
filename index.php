@@ -51,7 +51,7 @@ header("Pragma: no-cache");
 // Cross Site Scripting elleni védelem
 $nonce = base64_encode(random_bytes(16));
 Settings::$nonce = $nonce;
-header("Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-$nonce'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; require-trusted-types-for 'script'");
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-$nonce'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; require-trusted-types-for 'script'");
 
 // Session adatok bekérése az adatbázisból, és frissítése, ha létezik
 $session_id = Logging::SessionDB();

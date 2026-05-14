@@ -81,28 +81,11 @@ class Alapanyag extends Page
             }
         }
         elseif($this->selectedpage == 'alapanyagok') {
-            $elemperoldal = 20;
-            $startindex = 0;
-            if($params['method'] == 'oldal' && isset($params['elemid'])){
-                if($params['elemid'] != 1)
-                    $startindex = ($params['elemid'] - 1) * $elemperoldal + 1;
-                $this->lapozas['elozo'] = ($params['elemid'] > 1) ? $params['elemid'] - 1 : null;
-                $this->lapozas['kovetkezo'] = $params['elemid'] + 1;
-            }
-            else {
-                $this->lapozas['kovetkezo'] = 2;
-            }
-
             $this->view = $this->views['alapanyagok'];
-            $this->alapanyag = AlapanyagDB::GetAlapanyagok($startindex, $elemperoldal);
-
-            if(!$this->alapanyag) {
-                $this->alapanyag = [];
-            }
-
-            if(count($this->alapanyag) < $elemperoldal) {
-                $this->lapozas['kovetkezo'] = null;
-            }
+            $startindex = 0;
+            $elemperoldal = 20;
+            $this->LapozasPrepare($startindex, $elemperoldal, $params);
+            $this->alapanyag = $this->LapozasFinalize(AlapanyagDB::GetAlapanyagok($startindex, $elemperoldal), $elemperoldal);
         }
 
         return $this;

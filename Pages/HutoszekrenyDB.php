@@ -44,11 +44,12 @@ class HutoszekrenyDB
         return $huto->EscapedArray()[0];
     }
 
-    public static function GetHutoszekrenyek() : array {
+    public static function GetHutoszekrenyek(int $startindex = 0, int $dbszam = 20) : array {
         $hutok = new MySQLHandler("SELECT null AS '', felhasznalok.usernev AS Felhasználó, huto_nev AS 'Hűtő neve', huto_id
             FROM hutoszekrenyek
                 INNER JOIN felhasznalok ON hutoszekrenyek.felhasznalo_id = felhasznalok.felhasznalo_id
-            ORDER BY felhasznalok.usernev;");
+            ORDER BY felhasznalok.usernev
+            LIMIT ?, ?;", $startindex, $dbszam);
         return $hutok->EscapedArray();
     }
 

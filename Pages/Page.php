@@ -117,6 +117,32 @@ Class Page
         include(__DIR__ . "/views/_assets/lapozo.php");
     }
 
+    protected function LapozasPrepare(int &$startindex, int &$elemperoldal, array $params) {
+        $elemperoldal = 20;
+        $startindex = 0;
+        if($params['method'] == 'oldal' && isset($params['elemid'])){
+            if($params['elemid'] != 1)
+                $startindex = ($params['elemid'] - 1) * $elemperoldal + 1;
+            $this->lapozas['elozo'] = ($params['elemid'] > 1) ? $params['elemid'] - 1 : null;
+            $this->lapozas['kovetkezo'] = $params['elemid'] + 1;
+        }
+        else {
+            $this->lapozas['kovetkezo'] = 2;
+        }
+    }
+
+    protected function LapozasFinalize(?array $viewtomb, int $elemperoldal) : array {
+        if(!$viewtomb) {
+            $viewtomb = [];
+        }
+
+        if(count($viewtomb) < $elemperoldal) {
+            $this->lapozas['kovetkezo'] = null;
+        }
+
+        return $viewtomb;
+    }
+
     public function Router(array $params) : Page {
         return $this;
     }
