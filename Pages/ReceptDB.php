@@ -25,7 +25,7 @@ class ReceptDB
                     AND (recept_kepek.elsodleges IS NULL OR recept_kepek.elsodleges = 1)
                     AND szakacskonyvek.felhasznalo_id = ?";
 
-    private static string $alap_lista_query_order = " ORDER BY ertekeles DESC;";
+    private static string $alap_lista_query_order = " ORDER BY ertekeles DESC";
     public static function UjRecept(string $recept_nev, string $recept_szoveg, int $lathatosag, $slug, ?string $adagmeret, array $alapanyagok, ?int $elokeszuletek, ?int $sutesido, int $uid) : int|bool {
         $sikeresdb = true;
         $allergenek = $alapanyagok['allergenek'];
@@ -147,10 +147,10 @@ class ReceptDB
         return ['recept' => $recept, 'alapanyagok' => $alapanyagok->EscapedArray(), 'kepek' => $kepek->EscapedArray()];
     }
 
-    public static function GetReceptek() : array {
+    public static function GetReceptek(int $startindex = 0, int $dbszam = 20) : array {
         $receptek = new MySQLHandler();
-        $receptek->Prepare(self::$alap_lista_query . self::$alap_lista_query_where . ' GROUP BY receptek.recept_id' . self::$alap_lista_query_order);
-        $receptek->Run(Settings::$uid, Settings::$uid);
+        $receptek->Prepare(self::$alap_lista_query . self::$alap_lista_query_where . ' GROUP BY receptek.recept_id' . self::$alap_lista_query_order . ' LIMIT ?, ?;');
+        $receptek->Run(Settings::$uid, Settings::$uid, $startindex, $dbszam);
 
         return $receptek->EscapedArray();
     }

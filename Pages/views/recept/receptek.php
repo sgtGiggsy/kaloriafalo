@@ -44,4 +44,5 @@ if (!defined('ROOT_PATH')) {
             </a><?php
         }
     ?></div>
+    <?=$this->Lapozo()?>
 </div>
