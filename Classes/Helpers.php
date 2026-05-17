@@ -125,7 +125,7 @@ class Helpers
         ?><table <?=$tableclass?>>
             <thead>
             <tr><?php
-                foreach(array_keys($array[0]) as $key)
+                foreach(array_keys($array[array_key_first($array)]) as $key)
                 {
                     if(!$linkid || $key != $linkid) {
                         ?><th><?=ucfirst($key)?></th><?php

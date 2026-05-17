@@ -98,17 +98,18 @@ Class Page
         if(!$params || count($params) == 0)
             return ['elemid' => null, 'method' => null];
 
+        $keys = array_keys($params);
         switch(count($params)) {
             case 1:
-                if(is_numeric($params[0]))
-                    return ['elemid' => (int)$params[0], 'method' => null];
-                if(in_array($params[0], $this->validpagemethods))
-                    return ['method' => $params[0], 'elemid' => null];
-                return ['elemid' => $params[0], 'method' => null];
+                if(is_numeric($params[$keys[0]]))
+                    return ['elemid' => (int)$params[$keys[0]], 'method' => null];
+                if(in_array($params[$keys[0]], $this->validpagemethods))
+                    return ['method' => $params[$keys[0]], 'elemid' => null];
+                return ['elemid' => $params[$keys[0]], 'method' => null];
             case 2:
-                if(is_numeric($params[1]))
-                    return ['elemid' => (int)$params[1], 'method' => $params[0]];
-                return ['elemid' => $params[1], 'method' => $params[0]];
+                if(is_numeric($params[$keys[1]]))
+                    return ['elemid' => (int)$params[$keys[1]], 'method' => $params[$keys[0]]];
+                return ['elemid' => $params[$keys[1]], 'method' => $params[$keys[0]]];
             default:
                 return ['elemid' => null, 'method' => null];
         }
