@@ -409,12 +409,23 @@ class MySQLHandler
         return $returnarr;
     }
 
-    public function EscapedArray(string ...$htmlfields) {
+    /**
+     * Az adatbázis lekérdezés eredménye escape-elt tömbként.
+     * A tömbben a sorok kulcsa az ELSŐ mező tartalma. Kényelmi okokból van így,
+     * arra figyelni kell, hogy a lekérdezés első mezője mindig primary, vagy legalábbis unique legyen
+     *
+     * @param string $htmlfields A mezőnevek, amiket nem akarunk escape-elni.
+     * @return array Escapelt adatbázisból vett mezők
+     */
+    public function EscapedArray(string ...$htmlfields) : array {
         $returnarr = [];
         foreach($this->result as $sor)
         {
             $sorarr = [];
+            $recordkey = null;
             foreach($sor as $key => $value) {
+                if($recordkey === null)
+                    $recordkey = $value;
                 if($htmlfields && in_array($key, $htmlfields))
                     $sorarr[$key] = $value;
                 else {
@@ -424,9 +435,15 @@ class MySQLHandler
                         $sorarr[$key] = htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                 }
             }
-            $returnarr[] = $sorarr;
+            $returnarr[$recordkey] = $sorarr;
         }
+
         return $returnarr;
+    }
+
+    public function EscapedSingleElem(...$htmlfields) : array {
+        $eredmeny = $this->EscapedArray(...$htmlfields);
+        return $eredmeny[array_key_first($eredmeny)];
     }
 
     public function ToTable()

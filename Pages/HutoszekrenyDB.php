@@ -24,7 +24,7 @@ class HutoszekrenyDB
             FROM hutoszekrenyek
                 INNER JOIN felhasznalok ON hutoszekrenyek.felhasznalo_id = felhasznalok.felhasznalo_id
             WHERE felhasznalok.felhasznalo_id = ?;", $felhasznalo_id);
-        $huto = $huto->EscapedArray()[0];
+        $huto = $huto->EscapedSingleElem();
         $tartalom = self::GetHutoTartalomHelper($huto['huto_id']);
         return ['huto' => $huto, 'tartalom' => $tartalom];
     }
@@ -34,14 +34,14 @@ class HutoszekrenyDB
             FROM hutoszekrenyek
                 INNER JOIN felhasznalok ON hutoszekrenyek.felhasznalo_id = felhasznalok.felhasznalo_id
             WHERE huto_id = ?;", $hutoszekreny_id);
-        $huto = $huto->AsArray()[0];
+        $huto = $huto->EscapedSingleElem();
         $tartalom = self::GetHutoTartalomHelper($huto['huto_id']);
         return ['huto' => $huto, 'tartalom' => $tartalom];
     }
 
     public static function GetHutoszekrenyByNev(int $hutoszekreny_id) : array {
         $huto = new MySQLHandler("SELECT * FROM hutoszekrenyek WHERE huto_nev = ?;", $hutoszekreny_id);
-        return $huto->EscapedArray()[0];
+        return $huto->EscapedSingleElem();
     }
 
     public static function GetHutoszekrenyek(int $startindex = 0, int $dbszam = 20) : array {

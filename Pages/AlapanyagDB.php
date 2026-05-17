@@ -7,16 +7,15 @@ use Kaloriafalo\Classes\MySQLHandler;
 class AlapanyagDB
 {
     public static function GetAlapanyag(string $slug) : ?array {
-        $alapanyag = new MySQLHandler("SELECT alapanyag_nev, alapanyag_id, kaloria, mertekegyseg, feherje, zsir, szenhidrat, cukor, gluten, laktoz, slug
+        $alapanyag = new MySQLHandler("SELECT alapanyag_id, alapanyag_nev, kaloria, mertekegyseg, feherje, zsir, szenhidrat, cukor, gluten, laktoz, slug
             FROM alapanyagok WHERE slug = ?;", $slug);
         if($alapanyag->sorokszama == 0)
             return null;
-        else
-            return $alapanyag->EscapedArray()[0];
+        return $alapanyag->EscapedSingleElem();
     }
 
     public static function GetAlapanyagok(int $startindex = 0, int $dbszam = 20) : ?array {
-        $alapanyag = new MySQLHandler("SELECT alapanyag_nev AS alapanyag, kaloria AS kalória, mertekegyseg AS mértékegység, szenhidrat AS szénhidrát, feherje AS fehérje, zsir AS zsír, IF(cukor, '*', '') AS cukor, IF(gluten, '*', '') AS glutén, IF(laktoz, '*', '') AS laktóz, slug, alapanyag_id
+        $alapanyag = new MySQLHandler("SELECT alapanyag_id, alapanyag_nev AS alapanyag, kaloria AS kalória, mertekegyseg AS mértékegység, szenhidrat AS szénhidrát, feherje AS fehérje, zsir AS zsír, IF(cukor, '*', '') AS cukor, IF(gluten, '*', '') AS glutén, IF(laktoz, '*', '') AS laktóz, slug
             FROM alapanyagok
             ORDER BY alapanyag_nev
             LIMIT ?, ?;", $startindex, $dbszam);

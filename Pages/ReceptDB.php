@@ -117,11 +117,11 @@ class ReceptDB
     }
 
     public static function GetRecept(string $slug) : ?array {
-        $recept = new MySQLHandler("SELECT recept_nev, recept_szoveg, receptek.letrehozas_ideje, slug, elokeszuletek, sutesido, lathatosag, adagmeret,
+        $recept = new MySQLHandler("SELECT recept_nev, recept_szoveg, receptek.letrehozas_ideje, slug, elokeszuletek, sutesido, lathatosag, adagmeret, tapanyagtablazat,
                     receptek.cukor AS cukor, receptek.gluten AS gluten, receptek.laktoz AS laktoz, receptek.recept_id, receptek.felhasznalo_id, receptek.recept_id AS recept_id,
                     AVG(recept_ertekelesek.ertekeles) AS ertekeles,
                     COUNT(recept_ertekelesek.ertekeles) AS ertekelesek_szama,
-                    IF(szakacskonyvrecept_id, 1, 0) AS mentve
+                    SUM(IF(szakacskonyvek.felhasznalo_id = ?, 1, 0)) AS mentve
                 FROM receptek
                     LEFT JOIN recept_ertekelesek ON recept_ertekelesek.recept_id = receptek.recept_id
                     LEFT JOIN recept_kepek ON recept_kepek.recept_id = receptek.recept_id
@@ -129,13 +129,12 @@ class ReceptDB
                     LEFT JOIN szakacskonyv_receptek ON szakacskonyv_receptek.recept_id = receptek.recept_id
                     LEFT JOIN szakacskonyvek ON szakacskonyv_receptek.szakacskonyv_id = szakacskonyvek.szakacskonyv_id
                 WHERE receptek.slug = ?
-                    AND (szakacskonyvrecept_id IS NULL OR szakacskonyvek.felhasznalo_id = ?)
-                GROUP BY receptek.recept_id;", $slug, Settings::$uid);
+                GROUP BY receptek.recept_id;", Settings::$uid, $slug);
         if($recept->sorokszama == 0)
             return null;
 
-        $recept = $recept->EscapedArray('recept_szoveg')[0];
-        $alapanyagok = new MySQLHandler("SELECT alapanyag_nev, recept_alapanyagok.mertekegyseg AS mertekegyseg, mennyiseg
+        $recept = $recept->EscapedSingleElem('recept_szoveg', 'tapanyagtablazat');
+        $alapanyagok = new MySQLHandler("SELECT alapanyag_nev, recept_alapanyagok.mertekegyseg AS mertekegyseg, mennyiseg, kaloria, alapanyagok.mertekegyseg AS alapanyagegyseg, feherje, szenhidrat, zsir
                 FROM recept_alapanyagok
                     INNER JOIN alapanyagok ON alapanyagok.alapanyag_id = recept_alapanyagok.alapanyag_id
                 WHERE recept_alapanyagok.recept_id = ?;", $recept['recept_id']);
@@ -171,7 +170,11 @@ class ReceptDB
         return $receptek->EscapedArray();
     }
 
-    public static function GetReceptIrasjog(int $felhasznalo_id, int $elem_id) : bool {
+    public static function GetReceptIrasjog(?int $felhasznalo_id, int $elem_id) : bool {
+        if(Settings::$admin)
+            return true;
+        if($felhasznalo_id == null)
+            return false;
         $irasjog = new MySQLHandler("SELECT slug FROM receptek WHERE recept_id = ? OR slug = ? AND felhasznalo_id = ?;", $elem_id, $elem_id, $felhasznalo_id);
         if($irasjog->sorokszama == 0)
             return false;
