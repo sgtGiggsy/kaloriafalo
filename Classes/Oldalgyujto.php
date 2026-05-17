@@ -4,8 +4,8 @@ namespace Kaloriafalo\Classes;
 
 use Kaloriafalo\Pages\Alapanyag;
 use Kaloriafalo\Pages\Page;
-use Kaloriafalo\Pages\Api;
 use Kaloriafalo\Pages\Autentikacio;
+use Kaloriafalo\Pages\Cimke;
 use Kaloriafalo\Pages\Recept;
 use Kaloriafalo\Pages\Beallitasok;
 use Kaloriafalo\Pages\Felhasznalo;
@@ -31,6 +31,22 @@ class Oldalgyujto
             'szulo' => null,
             'ikon' => null,
             'handler' => Alapanyag::class],
+        'cimke' => [
+            'menupont' => 'Cimke',
+            'lathatosag' => 'adminok',
+            'menuben' => false,
+            'sorrend' => null,
+            'szulo' => null,
+            'ikon' => null,
+            'handler' => Cimke::class],
+        'cimkek' => [
+            'menupont' => 'Cimkék',
+            'lathatosag' => 'adminok',
+            'menuben' => true,
+            'sorrend' => 62,
+            'szulo' => 'adminisztracio',
+            'ikon' => null,
+            'handler' => Cimke::class],
         'belepes' => [
             'menupont' => 'Belépés',
             'lathatosag' => 'vendeg',
