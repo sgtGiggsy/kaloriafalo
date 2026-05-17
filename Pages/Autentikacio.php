@@ -32,6 +32,7 @@ class Autentikacio extends Page
         $megerositokod = null;
 
         if($this->selectedpage == 'regisztracio') {
+            $this->jsfiles = ['Pages/views/autentikacio/assets/inputValid.js'];
             if($params['method'] == 'sikeres')
                 $this->view = $this->views['sikeresreg'];
             elseif($params['method'] == 'sikertelen')
