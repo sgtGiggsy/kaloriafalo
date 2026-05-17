@@ -1,4 +1,9 @@
 var utrendez = 99999;
+const mobilmenu = document.getElementById("menunyitzar");
+const overlay = document.getElementById("overlay");
+
+mobilmenu.addEventListener("click", () => showMenu());
+overlay.addEventListener("click", () => showMenu(false));
 
 var toaster = Swal.mixin({
     toast: true,
@@ -45,7 +50,6 @@ function hideMenu(linkek, gomb, overlay) {
 function showMenu(show = true) {
     let linkek = document.getElementById("linkek");
     let gomb = document.getElementById("menunyitzar");
-    let overlay = document.getElementById("overlay");
     let btn = document.getElementById('menunyitzar');
     btn.classList.toggle('active');
     linkek.classList.toggle('open');

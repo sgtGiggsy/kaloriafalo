@@ -10,28 +10,22 @@
 
 /* Színmeghatározások */
 :root {
-    --bodybg: #fdfdfd;
+    --bodybg: #fffaed;
     --bodyfont: #090e1f;
-    --bodylink: #2f529d;
+    --bodylink: var(--footerbg);
     --mainmenubg: #ebce5b;
-    /*--mainmenubg: #fcd025;*/
     --mainmenufont: #2f2e2e;
-    --dropdownbg: #f9f9f9;
-    --dropdownhover: #ececec;
-    --dropdownfont: #000000;
     --footerbg: #3a2f1f;
     --footerfont: #F1F1F1;
     --footerborder: #454545;
-    --theadbg: linear-gradient(to right, #631414, #111152);
-    --bajnokbg: linear-gradient(to right, #CC0000, #990000);
-    --kihivobg: linear-gradient(to right, #0066CC, #003366);
-    --kiesettbg: linear-gradient(to right, #999, #666);
+    --dropdownbg: #f9f9f9;
+    --dropdownhover: #ececec;
+    --dropdownfont: #000000;
     --tableborder: #999;
     --uzenetbg: #eeee;
     --adminreaktbg: #bbb;
-    --buttonbg: #313980;
-    --buttonfont: #F1F1F1;
-    --playerheadgrad: linear-gradient(to top, var(--bodybg), #FFFFFF60);
+    --buttonbg: #ebce5b;
+    --buttonfont: var(--footerbg);
     --ministatbg: #41414130;
     --trocolor: #fdfdfd;
     --trecolor: #f8f8f8;
@@ -41,6 +35,8 @@
     --matchcimke: #cdcdcd;
     --cbchecked: #454545;
     --shadow: #ccc;
+    --receptelembg: #fff;
+    --receptadatlapbg: #bbbbbb70;
 }
 
 *, *:before, *:after {
@@ -60,6 +56,24 @@ body {
 html, body {
     height: 100%;
     margin: 0;
+}
+
+.header {
+    display: grid;
+    height: 300px;
+    background-size: cover;
+}
+
+.header h1 {
+    font-weight: 100;
+    font-size: 3em;
+    margin-left: 0.5em;
+    margin-block-end: 0;
+}
+
+.header svg {
+    overflow: unset;
+    height: 1em;
 }
 
 main {
@@ -279,7 +293,7 @@ nav.mainmenu ul.links li {
   height: 24px;
   position: relative;
   background: none;
-  margin-left: 1em;
+  margin: 1em 0 0 1em;
 }
 
 .menubutton span {
@@ -399,7 +413,8 @@ nav.mainmenu ul.links li {
 
 .mobile li {
     flex: 1;
-    justify-items: center;
+    justify-items: left;
+
 }
 
 #overlay {
@@ -689,6 +704,7 @@ footer {
     flex-direction: row;
     height: 9em;
     box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+    background-color: var(--receptelembg);
 }
 
 .receptelem:hover {
@@ -727,7 +743,7 @@ footer {
     margin-top: 0;
 }
 
-.spreader {
+.spreader, #menugrow {
     flex-grow: 1;
 }
 
@@ -862,7 +878,7 @@ footer {
 }
 
 .socials img {
-    filter: sepia() hue-rotate(140deg) saturate(300%) brightness(0.7);
+    filter: sepia() saturate(300%) brightness(0.7);
     width: 48px;
     padding: 0.3em;
     /*border: #fff 2px solid;
@@ -870,103 +886,12 @@ footer {
 }
 
 .socials img:hover {
-    filter: sepia() hue-rotate(140deg) saturate(300%) brightness(0.4);
+    filter: sepia() saturate(300%) brightness(0.4);
     cursor: pointer;
 }
 
-@media (max-width: 600px) {
-    main {
-        font-size: 0.9em;
-    }
-
-    .normalcontent {
-        padding: 1em;
-    }
-
-    .footermiddle {
-        grid-template-columns: 1fr;
-    }
-
-    .uzenetir {
-        grid-template-columns: 1fr;
-    }
-
-    .uzenetir textarea {
-        height: 20ch;
-        width: 40ch;
-    }
-
-    .usermenu ul{
-        flex-direction: column;
-    }
-
-    .ministat {
-        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-        width: clamp(200px, 95%, 100%);
-        font-size: 0.7em;
-        padding: 0.3em;
-    }
-
-    .regulartable {
-        width: 90vw;
-        font-size: 0.7em;
-    }
-
-    .tabellak, .versenyzostats {
-        grid-template-columns: 1fr;
-        max-width: 90vw;
-    }
-
-    .smallfonttable {
-        font-size: 0.9em;
-    }
-
-    .hirekfo {
-        grid-template-columns: 1fr;
-    }
-
-    .playertable {
-        grid-template-columns: 1fr 1.3fr;
-    }
-
-    .playertable > :last-child {
-        grid-column: 1 / -1;
-    }
-
-    .wrapper {
-        font-size: 0.8em;
-    }
-
-    .mobile {
-        display: flex;
-    }
-
-    .links {
-        position: fixed;
-        top: 3.2em;
-        flex-direction: column;
-        background-color: var(--mainmenubg);
-        height: calc(100% - 3.2em);
-    }
-
-    #linkek {
-        width: 200px;
-        left: -200px;
-        transition: left 0.5s ease;
-    }
-
-    #linkek.open {
-        left: 0;
-    }
-}
-
-@media (min-width: 601px) {
-    .footermiddle {
-        grid-template-columns: min-content 1fr;
-    }
-    .hirekfo {
-        grid-template-columns: 3fr 1fr;
-    }
+.onlymobile {
+    display: none;
 }
 
 /* EGYEDI CHECKBOX */
@@ -1174,4 +1099,177 @@ footer {
 .leftright :last-child:not(:only-child) {
     justify-self: right;
     text-align: right;
+}
+
+.jelszoblokk {
+    display: grid;
+    grid-template-rows: repeat(2, auto);
+    grid-auto-flow: column;
+    gap: 1em;
+}
+
+.jelszoblokk > :last-child {
+    grid-row: 1 / 3;
+}
+
+#jelszoszabalyok {
+    list-style: none;
+    padding: 0;
+}
+
+#jelszoszabalyok li {
+    color: #999;
+}
+
+#jelszoszabalyok li.valid {
+    color: green;
+}
+
+#jelszoszabalyok li.invalid {
+    color: red;
+}
+
+#jelszoerobox {
+    width: 250px;
+    margin-top: 10px;
+}
+
+#jelszocsik {
+    height: 8px;
+    width: 0%;
+    background: red;
+    transition: width 0.2s ease, background 0.2s ease;
+    border-radius: 4px;
+}
+
+#jelszoero {
+    font-size: 12px;
+    margin-top: 5px;
+    color: #666;
+}
+
+.receptadatlap {
+    background: var(--receptadatlapbg);
+    width: clamp(200px, 300px, 500px);
+    font-size: 0.8em;
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    font-weight: bold;
+    padding: 0.3em 1.2em;
+    margin: 2em;
+    justify-self: right;
+}
+
+.receptadatlap h2 {
+    grid-column: 1 / -1;
+    font-size: 1.4em;
+    font-weight: bold;
+    margin-top: 0;
+    text-align: center;
+}
+
+@media (max-width: 600px) {
+    #menu_oldallogo {
+        display: none;
+    }
+
+    #menugrow {
+        display: none;
+    }
+
+    .onlymobile {
+        display: block;
+    }
+
+    .headericons {
+        display: none;
+    }
+
+    main {
+        font-size: 0.9em;
+    }
+
+    .normalcontent {
+        padding: 1em;
+    }
+
+    .footermiddle {
+        grid-template-columns: 1fr;
+    }
+
+    .uzenetir {
+        grid-template-columns: 1fr;
+    }
+
+    .uzenetir textarea {
+        height: 20ch;
+        width: 40ch;
+    }
+
+    .usermenu ul{
+        flex-direction: column;
+    }
+
+    .regulartable {
+        width: 90vw;
+        font-size: 0.7em;
+    }
+
+    .tabellak, .versenyzostats {
+        grid-template-columns: 1fr;
+        max-width: 90vw;
+    }
+
+    .smallfonttable {
+        font-size: 0.9em;
+    }
+
+    .hirekfo {
+        grid-template-columns: 1fr;
+    }
+
+    .playertable {
+        grid-template-columns: 1fr 1.3fr;
+    }
+
+    .playertable > :last-child {
+        grid-column: 1 / -1;
+    }
+
+    .wrapper {
+        font-size: 0.8em;
+    }
+
+    .mobile {
+        display: flex;
+    }
+
+    .links {
+        position: fixed;
+        top: 3.2em;
+        flex-direction: column;
+        background-color: var(--mainmenubg);
+        height: calc(100% - 3.2em);
+    }
+
+    #linkek {
+        width: 200px;
+        left: -200px;
+        transition: left 0.5s ease;
+    }
+
+    #linkek.open {
+        left: 0;
+    }
+}
+
+@media (min-width: 601px) {
+    .footermiddle {
+        grid-template-columns: min-content 1fr;
+    }
+    .hirekfo {
+        grid-template-columns: 3fr 1fr;
+    }
 }

@@ -33,7 +33,12 @@ $userszint = Helpers::UserSzint();
                 || ($menuelem['lathatosag'] == "vendeg" && $userszint == 0)
             ) {
 
-            $renderelem = ($menuelem['ikon']) ? GrafikaiElemek::$ikonok[$menuelem['ikon']] : $menuelem['menupont'];
+            if($menuelem['ikon']) {
+                $renderelem = GrafikaiElemek::$ikonok[$menuelem['ikon']] . "<span class='fomenuelem onlymobile'>" . $menuelem['menupont'] . "</span>";
+            }
+            else {
+                $renderelem = $menuelem['menupont'];
+            }
 
             $gyokerelem = $menuelem['szulo'] === true || $menuelem['szulo'] === null;
 
@@ -59,10 +64,10 @@ $userszint = Helpers::UserSzint();
 
             if(!$jobbraigazit && ($kulcs == 'adminisztracio' || $kulcs == 'felhasznalo' || $kulcs == 'belepes')) {
                 $jobbraigazit = true;
-                ?><li style="flex-grow: 1"></li><?php
+                ?><li id="menugrow"></li><?php
             }
 
-            ?><li<?=($gyokerelem) ? ' class="fomenugyoker"' : ''?>>
+            ?><li<?=($gyokerelem) ? ' class="fomenugyoker"' : ''?> <?=($kulcs == 'fooldal') ? ' id="menu_oldallogo"' : ''?>>
                 <a href="<?=$url?>"<?=($gyokerelem && !$menuelem['ikon']) ? ' class="fomenuelem"' : '' ?>>
                     <?=(!$gyokerelem) ? "<span>" : ""?>
                         <?=$renderelem?>
