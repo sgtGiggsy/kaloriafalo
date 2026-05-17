@@ -5,6 +5,7 @@ namespace Kaloriafalo\Pages;
 class SinglePage extends Page
 {
     protected array $views = [
+        '401' => '401.php',
         '403' => '403.php',
         '404' => '404.php',
         'fooldal' => 'fooldal.php',

@@ -25,6 +25,7 @@ Class Page
     public ?string $mixintext = null; // POST utáni üzeneteket tartalmazó változó
     public array $apimethods = []; // Az osztály elérhető API metódusai. Ami ebben nem szerepel, az nem hívható meg API-ként. A GET-re és a POST-ra is külön tömb-öt kell megadni!
     protected array $lapozas = ['elozo' => null, 'kovetkezo' => null]; // A lapozáshoz (ahol elérhető) használt lapszámok indexei.
+    protected array $params = []; // A GET-ből érkező paraméterek. Csak akkor van használatban, ha a View-nak tudnia kell róla. A Routerben kap értéket
     protected array $PHPvarsToJS = []; // Változók, amiket a PHP-ból generálunk, de a JS felületen akarunk használni. Közvetlenül a jsfiles tömb előtt kerül renderelésre.
     protected array $jsfiles = []; // Az osztály által használt JS fájlok elérési útjai. A tömbbe megadott fájlokat a rendszer az oldal legalján tölti be.
     protected ?string $localCSS = null; // Egyedi CSS fájl, amennyiben egy oldalhoz szükség lenne rá.
