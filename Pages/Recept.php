@@ -36,6 +36,76 @@ class Recept extends Page
 
     protected array $mediatypes = ['image/jpeg', 'image/bmp', 'image/png', 'image/webp'];
 
+    private array $mertekegysegek = [
+        'g' => 1,
+        'ml' => 1,
+        'cl' => 10,
+        'dkg' => 10,
+        'dl' => 100,
+        'kg' => 1000,
+        'l' => 1000,
+        'csipet' => 1,
+        'kk' => 5,
+        'tk' => 8,
+        'ek' => 15,
+        'pohár' => 200,
+        'csésze' => 250,
+        'bögre' => 250,
+        'fej' => 100,
+        'db' => 60,
+        'szelet' => 120,
+        'csomag' => 80
+    ];
+
+    private array $mertekegysegmap = [
+        'g' => 'g',
+        'gr' => 'g',
+        'gram' => 'g',
+        'gramm' => 'g',
+        'dkg' => 'dkg',
+        'deka' => 'dkg',
+        'dg' => 'dkg',
+        'dekagram' => 'dkg',
+        'dekagramm' => 'dkg',
+        'kg' => 'kg',
+        'kiló' => 'kg',
+        'kilo' => 'kg',
+        'kilogram' => 'kg',
+        'kilogramm' => 'kg',
+        'kilógram' => 'kg',
+        'kilógramm' => 'kg',
+        'ml' => 'ml',
+        'mili' => 'ml',
+        'milli' => 'ml',
+        'mililiter' => 'ml',
+        'milliliter' => 'ml',
+        'cl' => 'cl',
+        'cent' => 'cl',
+        'centiliter' => 'cl',
+        'dl' => 'dl',
+        'deci' => 'dl',
+        'deciliter' => 'dl',
+        'l' => 'l',
+        'liter' => 'l',
+        'kk' => 'kk',
+        'kávéskanál' => 'kk',
+        'tk' => 'tk',
+        'teáskanál' => 'tk',
+        'ek' => 'ek',
+        'evőkanál' => 'ek',
+        'db' => 'db',
+        'darab' => 'db',
+        'fej' => 'fej',
+        'csipet' => 'csipet',
+        'csg' => 'csomag',
+        'csomag' => 'csomag',
+        'köteg' => 'köteg',
+        'pohár' => 'pohár',
+        'bögre' => 'bögre',
+        'csésze' => 'csésze',
+        'szelet' => 'szelet'
+    ];
+
     public function Router(array $params) : Page {
         $this->validpagemethods = ['uj', 'szerkeszt', 'kereses', 'kategoriak'];
         $params = $this->ParseGet($params);
@@ -319,6 +389,20 @@ class Recept extends Page
         return $feldolgozott;
     }
 
+    private function TapanyagKalkulacio(array $osszetevok) : ?string {
+        $kaloria = $zsir = $feherje = $szenhidrat = 0;
+        foreach($osszetevok as $osszetevo) {
+            $hasznaltmennyiseg = $this->AlapraNormalizalas($osszetevo['mennyiseg'], $osszetevo['mertekegyseg']);
+            $kaloria += $osszetevo['kaloria'] * $hasznaltmennyiseg;
+            $zsir += $osszetevo['zsir'] * $hasznaltmennyiseg;
+            $feherje += $osszetevo['feherje'] * $hasznaltmennyiseg;
+            $szenhidrat += $osszetevo['szenhidrat'] * $hasznaltmennyiseg;
+        }
+
+        $tapanyagok = ['kaloria' => round($kaloria, 2), 'zsir' => round($zsir, 2), 'feherje' => round($feherje, 2), 'szenhidrat' => round($szenhidrat, 2)];
+        return json_encode($tapanyagok, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+    }
+
     private function GetCimkek(?array $receptcimkei = null) : array {
         if($receptcimkei)
             $kivalasztottcimkek = $receptcimkei;
@@ -419,5 +503,19 @@ class Recept extends Page
         $data['message'] = $ertekeles ? 'Az értékelésed sikeresen hozzáadva' : 'A receptet nem sikerült értékelni!';
 
         return $data;
+    }
+
+    /** Mivel az alapanyagok normalizált mennyisége a 100-as alap mértékegységben van megadva (tehát 100 gramm, 100 mili, stb)
+     * ezért először át kell váltani a mértékegységet, majd leosztani 100-zal,
+     * hogy megkapjuk a szorzószámot a tápanyag és kalória számításhoz.
+     * (pl.: 18 dkg rizs -> 180 gramm rizs -> 1,8 normalizált érték -> 1,8 * 130kcal = 234 kcal a felvitt mennyiségben
+     *
+     * !!! HOZZÁVETŐLEGES eredményt ad a nem triviális mértékegységek esetében (csipet, kk, ek, fej, csomag, stb)
+    */
+    private function AlapraNormalizalas(?int $mennyiseg, ?string $mertekegyseg) : float {
+        if(!$mennyiseg || !$mertekegyseg || !array_key_exists($mertekegyseg, $this->mertekegysegek))
+            return 0;
+
+        return $mennyiseg * $this->mertekegysegek[$mertekegyseg] / 100;
     }
 }
