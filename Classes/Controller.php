@@ -135,7 +135,7 @@ class Controller
                 )
             );
         }
-        else {
+        elseif($_SESSION['mixintext'] != 'no-mixin') {
             define('SWALMIXIN', array(
                 "title" => $_SESSION['mixintext'], 
                 "icon" => self::$icons[$_SESSION['eredmeny']] ?? "error"

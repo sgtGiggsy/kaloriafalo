@@ -141,8 +141,9 @@ class FormBuilder
             $checkbradio = $mezo['type'] == 'checkbox' || $mezo['type'] == 'radio';
             $hidden = $mezo['type'] == 'hidden';
             if(!$hidden) {
-                $html .= '<div';
-                $html .= ($checkbradio) ? ' class="customcbwrapper">' : '>';
+                $html .= '<div class="inputcont-' . $mezo['type'];
+                $html .= ($checkbradio) ? ' customcbwrapper' : '';
+                $html .= '">';
             }
 
             if(!$checkbradio && !$hidden)

@@ -16,7 +16,7 @@
     --mainmenubg: #ebce5b;
     --mainmenufont: #2f2e2e;
     --footerbg: #3a2f1f;
-    --footerfont: #F1F1F1;
+    --footerfont: #cccca6;
     --footerborder: #454545;
     --dropdownbg: #f9f9f9;
     --dropdownhover: #ececec;
@@ -773,15 +773,25 @@ footer {
 
 .cimke-item span {
     padding: 0.2em 0.6em;
-    border: 1px solid #ccc;
+    border: 1px solid var(--footerfont);
     border-radius: 16px;
     transition: 0.2s;
 }
 
 .cimke-item input:checked + span {
-    background: #007bff;
-    color: white;
-    border-color: #007bff;
+    background: var(--footerbg);
+    color: var(--footerfont);
+    border-color: var(--footerbg);
+}
+
+.formbuilder {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5em;
+}
+
+.formbuilder [class^="inputcont-"]:not([class$="number"]) {
+    grid-column: 1 / -1;
 }
 
 .spreader, #menugrow {

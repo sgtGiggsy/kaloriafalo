@@ -54,7 +54,8 @@ class Recept extends Page
         'fej' => 100,
         'db' => 60,
         'szelet' => 120,
-        'csomag' => 80
+        'csomag' => 80,
+        'gerezd' => 6
     ];
 
     private array $mertekegysegmap = [
@@ -275,9 +276,9 @@ class Recept extends Page
     private function Form(string $muvelet, ?array $recept = null) : FormBuilder {
         $form = (new FormBuilder())
             ->TextBox('recept_szoveg', 'Recept szövege')
-            ->Number('adagmeret', 'Adag (Hány főre elég?)')
             ->Number('elokeszuletek', 'Mennyi ideig tart a főzés/sütés előkészítse?')
             ->Number('sutesido', 'Mennyi a főzés/sütés ideje?')
+            ->Number('adagmeret', 'Adag (Hány főre elég?)')
             ->Checkbox('lathatosag', 'Recept látható nyilvánosan');
         if($muvelet == 'szerkeszt' && $recept != null && $this->GetIrasjog($recept['recept_id'])) {
             $form->Hidden('slug')
@@ -300,11 +301,13 @@ class Recept extends Page
             $slug = Helpers::SlugGenerator($_POST['recept_nev']);
             $slug = Helpers::SlugVerifier($slug, [ReceptDB::class, 'GetRecept']);
             $alapanyagok = $this->ParseAlapanyagok($_POST['alapanyagok']);
-            $tapanyagok = $this->TapanyagKalkulacio($alapanyagok);
-            $eredmeny = ReceptDB::UjRecept($_POST['recept_nev'], $_POST['recept_szoveg'], $_POST['lathatosag'] ?? 0, $slug, $_POST['adagmeret'], $alapanyagok, $tapanyagok, $_POST['elokeszuletek'] ?? null, $_POST['sutesido'] ?? null, Settings::$uid);
+            $tapanyagok = $this->TapanyagKalkulacio($alapanyagok['alapanyagok']);
+            $eredmeny = ReceptDB::UjRecept($_POST['recept_nev'], $_POST['recept_szoveg'], $_POST['lathatosag'] ?? 0, $slug, $_POST['adagmeret'], $alapanyagok, $_POST['elokeszuletek'] ?? null, $_POST['sutesido'] ?? null, $tapanyagok, Settings::$uid);
             if($eredmeny) {
                 $this->redirtarget = ROOT_PATH . '/recept/' . $slug;
 
+                $cimkek = $_POST['cimke'] ?? [];
+                $cimkementes = ReceptDB::ReceptCimkek($eredmeny, $cimkek);
                 if (isset($_FILES['kepek'])) {
                     $kepek = new FeltoltesHandler($this->mediatypes, 'receptkepek', date('Y'), 'receptkepek', Settings::$uid);
                     $kepidk = $kepek->Feltoltes($_FILES['kepek']);
@@ -313,7 +316,6 @@ class Recept extends Page
                     $eredmeny = ReceptDB::ReceptKepek($eredmeny, $kepidk['uploadids']);
                 }
             }
-
             return $eredmeny;
         }
         else
@@ -334,6 +336,7 @@ class Recept extends Page
 
     protected function Kategoriak() : bool {
         $_SESSION['kategoriacimkek'] = $_POST['cimke'] ?? [];
+        $this->mixintext = 'no-mixin';
         return true;
     }
 
@@ -342,9 +345,9 @@ class Recept extends Page
             return [];
         $feldolgozott = [];
         $allergenek = ['cukor' => 0, 'gluten' => 0, 'laktoz' => 0];
-        $alapdb = AlapanyagDB::GetAlapanyagok();
+        $alapdb = AlapanyagDB::GetAlapanyagok(0, -1);
         foreach($alapanyagok as $alapanyag) {
-            $megtalalt = false;
+            $megtalalt = null;
             $osszetevo = $alapanyag['alapanyag'];
 
             foreach($alapdb as $alap) {
@@ -355,13 +358,13 @@ class Recept extends Page
                         $allergenek['gluten'] = 1;
                     if($alap['laktóz'] == '*')
                         $allergenek['laktoz'] = 1;
-                    $megtalalt = true;
+                    $megtalalt = $alap;
                     break;
                 }
             }
             if($megtalalt) {
                 $mertek = $this->ParseMennyisegek($alapanyag['mennyiseg']);
-                $feldolgozott[] = ['mennyiseg' => $mertek['mennyiseg'] ?? null, 'mertekegyseg' => $mertek['mertekegyseg'] ?? null, 'alapanyag_id' => $osszetevo];
+                $feldolgozott[] = ['mennyiseg' => $mertek['mennyiseg'] ?? null, 'mertekegyseg' => $mertek['mertekegyseg'] ?? null, 'alapanyag_id' => $osszetevo, 'kaloria' => $megtalalt['kalória'], 'zsir' => $megtalalt['zsír'], 'feherje' => $megtalalt['fehérje'], 'szenhidrat' => $megtalalt['szénhidrát']];
             }
         }
 
@@ -371,7 +374,7 @@ class Recept extends Page
     private function ParseMennyisegek(?string $mennyiseg) : array {
         if(!$mennyiseg)
             return [];
-        $tmp = explode(' ', $mennyiseg);
+        $tmp = preg_split('/\s+/', trim($mennyiseg));
         $feldolgozott = [];
         switch(count($tmp)) {
             case 1:
@@ -384,7 +387,8 @@ class Recept extends Page
                     $feldolgozott['mennyiseg'] = (int)$tmp[0];
                 else
                     $feldolgozott['mennyiseg'] = null;
-                $feldolgozott['mertekegyseg'] = $tmp[1];
+
+                $feldolgozott['mertekegyseg'] = $this->mertekegysegmap[$tmp[1]] ?? $tmp[1];
         }
         return $feldolgozott;
     }
@@ -403,24 +407,35 @@ class Recept extends Page
         return json_encode($tapanyagok, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
     }
 
-    private function GetCimkek(?array $receptcimkei = null) : array {
+    private function GetCimkek(?array $receptcimkei = null, bool $inform = false) : array {
         if($receptcimkei)
             $kivalasztottcimkek = $receptcimkei;
-        elseif(isset($_SESSION['kategoriacimkek']))
+        elseif($inform === false && isset($_SESSION['kategoriacimkek']))
             $kivalasztottcimkek = $_SESSION['kategoriacimkek'];
         else
             $kivalasztottcimkek = [];
+
         $mindencimke = CimkeDB::GetCimkek();
         foreach($mindencimke as &$cimke) {
             if(in_array($cimke['receptcimke_id'], $kivalasztottcimkek)) {
                 $cimke['kivalasztva'] = true;
             }
         }
+
+        if($receptcimkei) {
+            $kivalasztottcimkek = [];
+            foreach($mindencimke as $cimke) {
+                if($cimke['kivalasztva'] == true)
+                    $kivalasztottcimkek[] = $cimke;
+            }
+            $mindencimke = $kivalasztottcimkek;
+        }
+
         return $mindencimke;
     }
 
-    protected function CimkeForm() : void {
-        $cimkek = $this->GetCimkek();
+    protected function CimkeForm(?array $receptcimkei = null, bool $inform = false) : void {
+        $cimkek = $this->GetCimkek($receptcimkei, $inform);
         $this->form = (new FormBuilder());
         include __DIR__ . "/views/recept/cimkefelho.php";
     }

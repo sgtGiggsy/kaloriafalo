@@ -26,13 +26,13 @@ class ReceptDB
                     AND szakacskonyvek.felhasznalo_id = ?";
 
     private static string $alap_lista_query_order = " ORDER BY ertekeles DESC";
-    public static function UjRecept(string $recept_nev, string $recept_szoveg, int $lathatosag, $slug, ?string $adagmeret, array $alapanyagok, ?int $elokeszuletek, ?int $sutesido, int $uid) : int|bool {
+    public static function UjRecept(string $recept_nev, string $recept_szoveg, int $lathatosag, $slug, ?string $adagmeret, array $alapanyagok, ?int $elokeszuletek, ?int $sutesido, string $tapanyagtabla, int $uid) : int|bool {
         $sikeresdb = true;
         $allergenek = $alapanyagok['allergenek'];
         $receptgyarto = new MySQLHandler();
         $receptgyarto->StartTransaction();
-        $receptgyarto->Prepare('INSERT INTO receptek (recept_nev, recept_szoveg, slug, felhasznalo_id, lathatosag, adagmeret, cukor, laktoz, gluten, elokeszuletek, sutesido, modosito_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);');
-        $receptgyarto->Run($recept_nev, $recept_szoveg, $slug, $uid, $lathatosag, $adagmeret, $allergenek['cukor'], $allergenek['laktoz'], $allergenek['gluten'], $elokeszuletek, $sutesido, $uid);
+        $receptgyarto->Prepare('INSERT INTO receptek (recept_nev, recept_szoveg, slug, felhasznalo_id, lathatosag, adagmeret, cukor, laktoz, gluten, elokeszuletek, sutesido, tapanyagtablazat, modosito_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);');
+        $receptgyarto->Run($recept_nev, $recept_szoveg, $slug, $uid, $lathatosag, $adagmeret, $allergenek['cukor'], $allergenek['laktoz'], $allergenek['gluten'], $elokeszuletek, $sutesido, $tapanyagtabla, $uid);
         if(!$receptgyarto->siker) {
             $sikeresdb = false;
         }
@@ -79,6 +79,32 @@ class ReceptDB
         }
         else {
             $kepek->Commit();
+            return true;
+        }
+    }
+
+    public static function ReceptCimkek(int $recept_id, array $cimkek) : bool {
+        $cimke = new MySQLHandler();
+        $cimke->StartTransaction();
+        $cimke->Prepare("DELETE FROM cimke_recept WHERE recept_id = ?;");
+        $cimke->Run($recept_id);
+        if(!$cimke->siker) {
+            $cimke->Rollback();
+            return false;
+        }
+        $cimke->Prepare("INSERT INTO cimke_recept (recept_id, receptcimke_id) VALUES (?, ?);");
+        foreach($cimkek as $cimke_id) {
+            $cimke->Run($recept_id, $cimke_id);
+            if(!$cimke->siker) {
+                break;
+            }
+        }
+        if(!$cimke->siker) {
+            $cimke->Rollback();
+            return false;
+        }
+        else {
+            $cimke->Commit();
             return true;
         }
     }
@@ -156,10 +182,10 @@ class ReceptDB
             $cimke_ids = [];
             foreach($cimkek as $cimke)
                 $cimke_ids[] = '?';
-            $qparams = [ Settings::$uid, Settings::$uid, ...$cimkek, $startindex, $dbszam ];
+            $qparams = [ Settings::$uid, Settings::$uid, ...$cimkek, count($cimkek), $startindex, $dbszam ];
             $receptek->Prepare(self::$alap_lista_query .
                 ' INNER JOIN cimke_recept ON cimke_recept.recept_id = receptek.recept_id' .
-                self::$alap_lista_query_where . ' AND cimke_recept.receptcimke_id IN (' . implode(',', $cimke_ids) . ') GROUP BY receptek.recept_id' . self::$alap_lista_query_order . ' LIMIT ?, ?;');
+                self::$alap_lista_query_where . ' AND cimke_recept.receptcimke_id IN (' . implode(',', $cimke_ids) . ') GROUP BY receptek.recept_id HAVING COUNT(DISTINCT cimke_recept.recept_id) = ?' . self::$alap_lista_query_order . ' LIMIT ?, ?;');
             $receptek->Run(...$qparams);
         }
 
