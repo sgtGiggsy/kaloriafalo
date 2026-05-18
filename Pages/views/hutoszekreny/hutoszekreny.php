@@ -1,6 +1,7 @@
 <?php
 
 use Kaloriafalo\Classes\Helpers;
+use Kaloriafalo\template\GrafikaiElemek;
 
 if (!defined('ROOT_PATH')) {
     http_response_code(403);
@@ -38,26 +39,30 @@ if (!defined('ROOT_PATH')) {
         </div>
         <div class="hutolehetosegek">
             <h2>Lehetőségeim</h2><?php
-                $elso = true;
-                $elozohianyzo = 0;
-                foreach($this->elerhetoreceptek as $elerheto) {
-                    if($elso) {
-                        $elozohianyzo = $elerheto['hianyzo_db'];
-                        $elso = false;
-                        if($elerheto['hianyzo_db'] != 0) {
-                            echo "<h3>Nincs olyan recept, amihez minden elérhető!</h3>";
-                            echo "<h3>Receptek $elozohianyzo darab hiányzó összetevővel:</h3>";
-                        }
-                    }
-                    if($elozohianyzo != $elerheto['hianyzo_db']) {
-                        $elozohianyzo = $elerheto['hianyzo_db'];
+            $elso = true;
+            $elozohianyzo = 0;
+            foreach($this->elerhetoreceptek as $elerheto) {
+                if($elso) {
+                    $elozohianyzo = $elerheto['hianyzo_db'];
+                    $elso = false;
+                    if($elerheto['hianyzo_db'] != 0) {
+                        echo "<h3>Nincs olyan recept, amihez minden elérhető!</h3>";
+                        GrafikaiElemek::HorizontalSep();
                         echo "<h3>Receptek $elozohianyzo darab hiányzó összetevővel:</h3>";
                     }
-                    ?><strong><?= $elerheto['recept_nev'] ?></strong><?php
-                    foreach($elerheto['hianyzo'] as $hianyzo) {
-                        ?><small><?= $hianyzo['alapanyag_nev'] ?></small><?php
-                    }
-
+                }
+                if($elozohianyzo != $elerheto['hianyzo_db']) {
+                    $elozohianyzo = $elerheto['hianyzo_db'];
+                    GrafikaiElemek::HorizontalSep();
+                    echo "<h3>Receptek $elozohianyzo darab hiányzó összetevővel:</h3>";
+                }
+                ?><div>
+                    <h4><a href="<?=ROOT_PATH . '/recept/' . $elerheto['slug']?>"><?= $elerheto['recept_nev'] ?></a></h4>
+                    <small><?php
+                        $hianyzok = array_column($elerheto['hianyzo'], 'alapanyag_nev');
+                        echo "<strong>Hiányzik:</strong> " . implode(', ', $hianyzok);
+                    ?></small>
+                </div><?php
             }
         ?></div><?php
     }

@@ -188,8 +188,8 @@ button, input[type="submit"] {
 }
 
 .dropzone {
-    border: 2px dashed #999;
-    border-radius: 10px;
+    border: 1px dashed var(--footerbg);
+    border-radius: 1em;
     padding: 30px;
     text-align: center;
     cursor: pointer;
@@ -197,13 +197,14 @@ button, input[type="submit"] {
 }
 
 .dropzone:hover {
-    border-color: #2d6cdf;
-    background: #f5f8ff;
+    border-color: var(--footerbg);
+    background: var(--footerfont);
 }
 
 .dropzone.dragover {
-    border-color: #2d6cdf;
-    background: #eaf1ff;
+    border-color: var(--footerfont);
+    background: var(--footerbg);
+    color: var(--footerfont);
 }
 
 .dropzone input {
@@ -577,9 +578,16 @@ footer {
     flex-direction: column;
 }
 
-.hutolehetosegek h3, .hutolehetosegek span {
+.hutolehetosegek h3, .hutolehetosegek h4, .hutolehetosegek span {
     margin-top: 0;
     margin-bottom: 0;
+}
+
+.horizontal-separator {
+    content: "";
+    display: block;
+    border-bottom: var(--footerborder) 1px solid;
+    margin: 0 1em;
 }
 
 .double2-1 {
@@ -671,6 +679,10 @@ footer {
     gap: 1em;
 }
 
+.receptlista a {
+    margin-left: 0.8em;
+}
+
 .kereses {
     display: flex;
     flex-direction: row;
@@ -739,6 +751,7 @@ footer {
     color: var(--footerfont);
     margin-bottom: 1em;
     width: fit-content;
+    height: fit-content;
 }
 
 .receptadatok {
@@ -1211,6 +1224,10 @@ footer {
     padding: 0.3em 1.2em;
     margin: 2em;
     justify-self: right;
+}
+
+.receptadatlap div {
+    align-content: center;
 }
 
 .receptadatlap h2 {

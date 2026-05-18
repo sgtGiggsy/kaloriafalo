@@ -27,6 +27,9 @@ class Hutoszekreny extends Page
         $this->validpagemethods = ['szerkeszt', 'tartalomszerkeszt'];
         $params = $this->ParseGet($params);
         if($this->selectedpage == 'hutoszekreny') {
+            if(!Settings::$uid)
+                return new SinglePage('401');
+
             $sajathuto = !Settings::$admin || (Settings::$admin && !$params['elemid']);
 
             if($sajathuto) {

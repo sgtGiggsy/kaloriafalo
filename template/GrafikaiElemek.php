@@ -30,4 +30,8 @@ class GrafikaiElemek
             echo sprintf($csillag, $i, $elem_id);
         }
     }
+
+    public static function HorizontalSep() : void {
+        echo '<div class="horizontal-separator"></div>';
+    }
 }

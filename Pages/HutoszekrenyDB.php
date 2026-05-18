@@ -62,7 +62,7 @@ class HutoszekrenyDB
     }
 
     public static function ReceptlistByTartalom(int $huto_id) : array {
-        $receptlista = new MySQLHandler("SELECT receptek.recept_id, receptek.recept_nev,
+        $receptlista = new MySQLHandler("SELECT receptek.recept_id, receptek.recept_nev, receptek.slug AS slug,
                     COUNT(recept_alapanyagok.alapanyag_id) AS osszes,
                     SUM(hutoszekreny_tartalmak.alapanyag_id IS NULL) AS hianyzo_db,
                     GROUP_CONCAT(
@@ -78,6 +78,7 @@ class HutoszekrenyDB
                     JOIN alapanyagok ON alapanyagok.alapanyag_id = recept_alapanyagok.alapanyag_id
                     LEFT JOIN hutoszekreny_tartalmak ON hutoszekreny_tartalmak.alapanyag_id = recept_alapanyagok.alapanyag_id AND hutoszekreny_tartalmak.huto_id = ?
                 GROUP BY receptek.recept_id
+                HAVING hianyzo_db < 4
                 ORDER BY hianyzo_db ASC
                 LIMIT 20;", $huto_id);
         $receptlista = $receptlista->EscapedArray($huto_id);
