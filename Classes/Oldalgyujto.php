@@ -174,7 +174,7 @@ class Oldalgyujto
             'sorrend' => 0,
             'szulo' => null,
             'ikon' => 'oldalminilogo',
-            'handler' => SinglePage::class],
+            'handler' => Recept::class],
         'adatkezelesi-tajekoztato' => [
             'menupont' => 'Adatkezelési tájékoztató',
             'lathatosag' => 'mindenki',

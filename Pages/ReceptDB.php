@@ -185,7 +185,9 @@ class ReceptDB
             $qparams = [ Settings::$uid, Settings::$uid, ...$cimkek, count($cimkek), $startindex, $dbszam ];
             $receptek->Prepare(self::$alap_lista_query .
                 ' INNER JOIN cimke_recept ON cimke_recept.recept_id = receptek.recept_id' .
-                self::$alap_lista_query_where . ' AND cimke_recept.receptcimke_id IN (' . implode(',', $cimke_ids) . ') GROUP BY receptek.recept_id HAVING COUNT(DISTINCT cimke_recept.recept_id) = ?' . self::$alap_lista_query_order . ' LIMIT ?, ?;');
+                self::$alap_lista_query_where . ' AND cimke_recept.receptcimke_id IN (' . implode(',', $cimke_ids) . ')
+                GROUP BY receptek.recept_id
+                HAVING COUNT(DISTINCT cimke_recept.receptcimke_id) = ?' . self::$alap_lista_query_order . ' LIMIT ?, ?;');
             $receptek->Run(...$qparams);
         }
 

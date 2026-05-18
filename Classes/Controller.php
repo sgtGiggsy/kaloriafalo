@@ -150,8 +150,8 @@ class Controller
 
     public static function PageSelect(?string $type): Page {
         if(!$type) {
-            $class = SinglePage::class;
-            $type = 'fooldal';
+            $class = Recept::class;
+            $type = 'recept';
         }
         elseif (!isset(Oldalgyujto::$oldalak[$type])
             || !class_exists(Oldalgyujto::$oldalak[$type]['handler'])) {
