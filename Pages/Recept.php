@@ -148,8 +148,9 @@ class Recept extends Page
             $this->irasjog = $this->GetIrasjog($this->recept['recept']['recept_id']);
             if($params['method'] == 'szerkeszt' && Settings::$uid && $this->irasjog) {
                 $this->muvelet = 'szerkeszt';
-                $this->form = $this->Form('szerkeszt');
+                $this->form = $this->Form('szerkeszt', $this->recept['recept']);
                 $this->view = $this->views['szerkeszt'];
+                $this->PHPvarsToJS['iterator'] = count($this->recept['alapanyagok']);
             }
             elseif(!$params['method'] == 'szerkeszt' && !$this->GetOlvasasjog($params['elemid']))
                 return new SinglePage('403');
@@ -268,9 +269,7 @@ class Recept extends Page
           "image": [
               <?='"' . implode('",
               "', $receptkepek) . '"'?>
-        ],
-        
-          "recipeCategory": "Főétel"
+          ]
         }
         </script><?php
     }
@@ -327,9 +326,33 @@ class Recept extends Page
     protected function Szerkeszt () : bool
     {
         if($this->GetIrasjog($_POST['recept_id'])) {
-            $eredmeny = ReceptDB::ReceptSzerkeszt($_POST['alapanyag_nev'], $_POST['kaloria'], $_POST['szenhidrat'] ?? null, $_POST['feherje'] ?? null, $_POST['zsir'] ?? null, $_POST['mertekegyseg'], $cukor, $gluten, $laktoz, $_POST['slug']);
-            if($eredmeny)
+            $kepidk = null;
+            $alapanyagok = $this->ParseAlapanyagok($_POST['alapanyagok']);
+            $tapanyagok = $this->TapanyagKalkulacio($alapanyagok['alapanyagok']);
+            $eredmeny = ReceptDB::ReceptSzerkeszt($_POST['recept_nev'], $_POST['recept_szoveg'], $_POST['lathatosag'] ?? 0, $_POST['adagmeret'], $alapanyagok, $_POST['elokeszuletek'] ?? null, $_POST['sutesido'] ?? null, $tapanyagok, Settings::$uid, $_POST['recept_id']);
+            if($eredmeny) {
                 $this->redirtarget = ROOT_PATH . '/recept/' . $_POST['slug'];
+
+                $cimkek = $_POST['cimke'] ?? [];
+                ReceptDB::ReceptCimkek($eredmeny, $cimkek);
+
+                if(isset($_POST['meglevokepek']))
+                    ReceptDB::KepAllapot($eredmeny, $_POST['meglevokepek']);
+                else
+                    ReceptDB::KepAllapot($eredmeny);
+
+                if(isset($_FILES['kepek'])) {
+                    $kepek = new FeltoltesHandler($this->mediatypes, 'receptkepek', date('Y'), 'receptkepek', Settings::$uid);
+                    $kepidk = $kepek->Feltoltes($_FILES['kepek']);
+                }
+                if($kepidk['eredmeny']) {
+                    $eredmeny = ReceptDB::ReceptKepek($eredmeny, $kepidk['uploadids']);
+                }
+
+                if(isset($_POST['boritokep']) && is_numeric($_POST['boritokep'])) {
+                    ReceptDB::ElsodlegesKep($eredmeny, $_POST['boritokep']);
+                }
+            }
             return $eredmeny;
         }
         else
@@ -384,12 +407,12 @@ class Recept extends Page
                     $feldolgozott['mennyiseg'] = (int)$tmp[0];
                 else
                     $feldolgozott['mennyiseg'] = null;
+                break;
             case 2:
                 if(is_numeric($tmp[0]) && is_int((int)$tmp[0]))
                     $feldolgozott['mennyiseg'] = (int)$tmp[0];
                 else
                     $feldolgozott['mennyiseg'] = null;
-
                 $feldolgozott['mertekegyseg'] = $this->mertekegysegmap[$tmp[1]] ?? $tmp[1];
         }
         return $feldolgozott;
@@ -427,7 +450,7 @@ class Recept extends Page
             }
         }
 
-        if($receptcimkei)
+        if($receptcimkei && !$inform)
             return $rcimkereturn;
 
         return $mindencimke;

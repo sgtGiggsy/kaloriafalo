@@ -33,7 +33,7 @@
     --matchfont: var(--footerbg);
     --matchborder: #e3e3e3;
     --matchcimke: #cdcdcd;
-    --cbchecked: #454545;
+    --cbchecked: var(--footerfont);
     --shadow: #ccc;
     --receptelembg: #fff;
     --receptadatlapbg: #bbbbbb70;
@@ -1078,7 +1078,7 @@ footer {
 .customradiojelolo:after {
     content: "";
     position: absolute;
-    border: solid var(--bodyfont);
+    border: solid var(--footerbg);
 }
 
 .customcbjelolo:after {
@@ -1089,7 +1089,6 @@ footer {
     height: 1em;
     border-width: 0 6px 6px 0;
     transform: rotate(45deg);
-    box-shadow: 3px 3px 3px var(--shadow);
 }
 
 .customradiojelolo:after {

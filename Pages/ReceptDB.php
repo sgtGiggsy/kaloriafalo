@@ -2,6 +2,7 @@
 
 namespace Kaloriafalo\Pages;
 
+use Kaloriafalo\Classes\Helpers;
 use Kaloriafalo\Classes\MySQLHandler;
 use Kaloriafalo\Classes\Settings;
 
@@ -27,6 +28,7 @@ class ReceptDB
 
     private static string $alap_lista_query_order = " ORDER BY ertekeles DESC";
     public static function UjRecept(string $recept_nev, string $recept_szoveg, int $lathatosag, $slug, ?string $adagmeret, array $alapanyagok, ?int $elokeszuletek, ?int $sutesido, string $tapanyagtabla, int $uid) : int|bool {
+        $recept_id = null;
         $sikeresdb = true;
         $allergenek = $alapanyagok['allergenek'];
         $receptgyarto = new MySQLHandler();
@@ -48,6 +50,46 @@ class ReceptDB
                 if(!$receptgyarto->siker) {
                     $sikeresdb = false;
                     break;
+                }
+            }
+        }
+        if(!$sikeresdb) {
+            $receptgyarto->Rollback();
+            return false;
+        }
+        else {
+            $receptgyarto->Commit();
+            return $recept_id;
+        }
+    }
+
+    public static function ReceptSzerkeszt(string $recept_nev, string $recept_szoveg, int $lathatosag, ?string $adagmeret, array $alapanyagok, ?int $elokeszuletek, ?int $sutesido, string $tapanyagtabla, int $uid, int $recept_id) : int|bool {
+        $sikeresdb = true;
+        $modositasideje = Helpers::TimeStampForSQL();
+        $allergenek = $alapanyagok['allergenek'];
+        $receptgyarto = new MySQLHandler();
+        $receptgyarto->StartTransaction();
+        $receptgyarto->Prepare('UPDATE receptek SET recept_nev = ?, recept_szoveg = ?, modosito_id = ?, modositas_ideje = ?, lathatosag = ?, adagmeret = ?, cukor = ?, laktoz = ?, gluten = ?, elokeszuletek = ?, sutesido = ?, tapanyagtablazat = ? WHERE recept_id = ?;');
+        $receptgyarto->Run($recept_nev, $recept_szoveg, $uid, $modositasideje, $lathatosag, $adagmeret, $allergenek['cukor'], $allergenek['laktoz'], $allergenek['gluten'], $elokeszuletek, $sutesido, $tapanyagtabla, $recept_id);
+        if(!$receptgyarto->siker) {
+            $sikeresdb = false;
+        }
+        else {
+            $receptgyarto->Query("DELETE FROM recept_alapanyagok WHERE recept_id = ?;", $recept_id);
+            if(!$receptgyarto->siker) {
+                $sikeresdb = false;
+            }
+            else {
+                foreach ($alapanyagok['alapanyagok'] as $alapanyag) {
+                    if(!$alapanyag['alapanyag_id'])
+                        break;
+
+                    $receptgyarto->Prepare('INSERT INTO recept_alapanyagok (recept_id, alapanyag_id, mertekegyseg, mennyiseg) VALUES (?, ?, ?, ?);');
+                    $receptgyarto->Run($recept_id, $alapanyag['alapanyag_id'], $alapanyag['mertekegyseg'], $alapanyag['mennyiseg']);
+                    if(!$receptgyarto->siker) {
+                        $sikeresdb = false;
+                        break;
+                    }
                 }
             }
         }
@@ -83,6 +125,37 @@ class ReceptDB
         }
     }
 
+    public static function ElsodlegesKep(int $recept_id, int $kep_id) : bool {
+        $db = new MySQLHandler();
+        $db->StartTransaction();
+        $db->Query("UPDATE recept_kepek SET elsodleges = 0 WHERE recept_id = ?;", $recept_id);
+        if(!$db->siker)
+            $db->Rollback();
+        else {
+            $db->Query("UPDATE recept_kepek SET elsodleges = 1 WHERE receptkep_id = ?;", $kep_id);
+            if(!$db->siker)
+                $db->Rollback();
+            else
+                $db->Commit();
+        }
+        return $db->siker;
+    }
+
+    public static function KepAllapot(int $recept_id, ?array $kepidk = null) : bool {
+        $megtart = "";
+        if(!$kepidk || count($kepidk) == 0) {
+            $kepallapot = new MySQLHandler("UPDATE recept_kepek SET latszik = 0 WHERE recept_id = ?;", $recept_id);
+            return $kepallapot->siker;
+        }
+
+        foreach ($kepidk as $kepid) {
+            $megtart .= "?, ";
+        }
+        $megtart = rtrim($megtart, ", ");
+        $kepallapot = new MySQLHandler("UPDATE recept_kepek SET latszik = 0 WHERE recept_id = ? AND receptkep_id NOT IN ($megtart);", $recept_id, ...$kepidk);
+        return $kepallapot->siker;
+    }
+
     public static function ReceptCimkek(int $recept_id, array $cimkek) : bool {
         $cimke = new MySQLHandler();
         $cimke->StartTransaction();
@@ -110,11 +183,9 @@ class ReceptDB
     }
 
     public static function BookmarkRecept(int $recept_id, int $felhasznalo_id) : ?bool {
-        $ret = false;
         $szakacskonyv_id = ReceptDB::GetSzakacskonyvId($felhasznalo_id);
         $bookmark = new MySQLHandler();
         $bookmark->Query('DELETE FROM szakacskonyv_receptek WHERE recept_id = ? AND szakacskonyv_id = ?;', $recept_id, $szakacskonyv_id);
-        $ret = $bookmark->siker;
         if($bookmark->affectedrows == 0) {
             $bookmark->Prepare("INSERT INTO szakacskonyv_receptek (recept_id, szakacskonyv_id)
                 VALUES (?, ?);");
@@ -158,14 +229,15 @@ class ReceptDB
             return null;
 
         $recept = $recept->EscapedSingleElem('recept_szoveg', 'tapanyagtablazat');
-        $alapanyagok = new MySQLHandler("SELECT alapanyag_nev, recept_alapanyagok.mertekegyseg AS mertekegyseg, mennyiseg, kaloria, alapanyagok.mertekegyseg AS alapanyagegyseg, feherje, szenhidrat, zsir
+        $alapanyagok = new MySQLHandler("SELECT alapanyag_nev, recept_alapanyagok.mertekegyseg AS mertekegyseg, mennyiseg, kaloria, alapanyagok.mertekegyseg AS alapanyagegyseg, feherje, szenhidrat, zsir, alapanyagok.alapanyag_id AS alapanyag_id
                 FROM recept_alapanyagok
                     INNER JOIN alapanyagok ON alapanyagok.alapanyag_id = recept_alapanyagok.alapanyag_id
                 WHERE recept_alapanyagok.recept_id = ?;", $recept['recept_id']);
 
-        $kepek = new MySQLHandler("SELECT fajl FROM recept_kepek
+        $kepek = new MySQLHandler("SELECT fajl, receptkep_id, elsodleges FROM recept_kepek
                     INNER JOIN feltoltesek ON feltoltesek.feltoltes_id = recept_kepek.feltoltes_id  
-                WHERE recept_id = ?;", $recept['recept_id']);
+                WHERE recept_id = ? AND latszik = 1
+                ORDER BY elsodleges DESC;", $recept['recept_id']);
 
         $cimkek = new MySQLHandler("SELECT receptcimke_id FROM cimke_recept WHERE recept_id = ?;", $recept['recept_id']);
 
@@ -206,7 +278,10 @@ class ReceptDB
     }
 
     public static function GetSzakacskonyv(string $uid) : array {
-        $receptek = new MySQLHandler(self::$alap_lista_query . self::$szakacskonyv_lista_query_where . ' GROUP BY receptek.recept_id' . self::$alap_lista_query_order, Settings::$uid, Settings::$uid, Settings::$uid);
+        $receptek = new MySQLHandler(self::$alap_lista_query .
+            self::$szakacskonyv_lista_query_where .
+            ' GROUP BY receptek.recept_id' .
+            self::$alap_lista_query_order, Settings::$uid, Settings::$uid, Settings::$uid);
         return $receptek->EscapedArray();
     }
 
