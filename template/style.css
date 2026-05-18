@@ -677,6 +677,7 @@ footer {
     background-color: var(--footerbg);
     padding: 3em;
     justify-content: center;
+    grid-column: 1/-1;
 }
 
 .kereses input {
@@ -697,6 +698,15 @@ footer {
     margin-left: 1em;
     width: 10ch;
     background-color: var(--mainmenubg);
+}
+
+.receptoldal {
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    gap: 1em;
+    margin-top: 1.5em;
+    overflow-x: hidden;
+    width: clamp(350px, 95%, 100%);
 }
 
 .receptelem {
@@ -741,6 +751,37 @@ footer {
 .receptadatok h2 {
     font-size: 1.2em;
     margin-top: 0;
+}
+
+.cimkefelho {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: unset;
+    gap: 0.2em;
+}
+
+.cimke-item {
+    font-size: 0.8em;
+    display: inline-block;
+    margin: 0.3em 0.1em;
+    cursor: pointer;
+}
+
+.cimke-item input {
+    display: none;
+}
+
+.cimke-item span {
+    padding: 0.2em 0.6em;
+    border: 1px solid #ccc;
+    border-radius: 16px;
+    transition: 0.2s;
+}
+
+.cimke-item input:checked + span {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
 }
 
 .spreader, #menugrow {

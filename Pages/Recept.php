@@ -30,19 +30,20 @@ class Recept extends Page
         'receptek' => 'receptek.php',
         'szakacskonyv' => 'szakacskonyv.php',
         'szerkeszt' => 'szerkeszt.php',
+        'cimkefelho' => 'cimkefelho.php',
         'uj' => 'uj.php'
     ];
 
     protected array $mediatypes = ['image/jpeg', 'image/bmp', 'image/png', 'image/webp'];
 
     public function Router(array $params) : Page {
-        $this->validpagemethods = ['uj', 'szerkeszt', 'kereses'];
+        $this->validpagemethods = ['uj', 'szerkeszt', 'kereses', 'kategoriak'];
         $params = $this->ParseGet($params);
+        $this->params = $params;
         if($this->selectedpage == 'receptek' || $this->selectedpage == 'recept' || $this->selectedpage == 'szakacskonyv') {
             $this->jsfiles[] = 'Pages/views/recept/assets/quickactions.js';
         }
         if($this->selectedpage == 'recept') {
-
             if($params['method'] == 'uj' || $params['method'] == 'szerkeszt') {
                 $this->jsfiles[] = 'Pages/views/_assets/js/fileupload.js';
                 $this->jsfiles[] = 'Pages/views/recept/assets/listautocomplete.js';
@@ -61,10 +62,17 @@ class Recept extends Page
                 return $this;
             }
 
-            if(!isset($params['elemid']))
-                return new Recept('receptek');
+            if(!isset($params['elemid'])) {
+                $recept = new Recept('receptek');
+                $recept->Router($params);
+                return $recept;
+            }
 
             $this->recept = ReceptDB::GetRecept($params['elemid']);
+
+            if(!$this->recept)
+                return new SinglePage('404');
+
             $this->irasjog = $this->GetIrasjog($this->recept['recept']['recept_id']);
             if($params['method'] == 'szerkeszt' && Settings::$uid && $this->irasjog) {
                 $this->muvelet = 'szerkeszt';
@@ -77,7 +85,6 @@ class Recept extends Page
                 $this->view = $this->views['recept'];
                 $this->headerview = $this->headerviews['recept'];
             }
-
             return $this;
         }
 
@@ -87,11 +94,18 @@ class Recept extends Page
             if(isset($params['method']) && isset($params['elemid']) && $params['method'] == 'kereses')
                 $kereses = $params['elemid'];
 
+            if($params['method'] == 'kategoriak') {
+                $this->muvelet = 'kategoriak';
+            }
+
             if(!$kereses) {
                 $startindex = 0;
                 $elemperoldal = 20;
                 $this->LapozasPrepare($startindex, $elemperoldal, $params);
-                $this->recept = $this->LapozasFinalize(ReceptDB::GetReceptek($startindex, $elemperoldal), $elemperoldal);
+                if(isset($_SESSION['kategoriacimkek']))
+                    $this->recept = $this->LapozasFinalize(ReceptDB::GetReceptek($startindex, $elemperoldal, $_SESSION['kategoriacimkek']), $elemperoldal);
+                else
+                    $this->recept = $this->LapozasFinalize(ReceptDB::GetReceptek($startindex, $elemperoldal), $elemperoldal);
             }
             else {
                 $this->recept = $this->ReceptKereses($kereses);
@@ -101,7 +115,10 @@ class Recept extends Page
             return $this;
         }
 
-        if($this->selectedpage == 'szakacskonyv' && Settings::$uid) {
+        if($this->selectedpage == 'szakacskonyv' && !Settings::$uid) {
+            return new SinglePage('401');
+        }
+        elseif($this->selectedpage == 'szakacskonyv') {
             $this->recept = ReceptDB::GetSzakacskonyv(Settings::$uid);
             $this->view = $this->views['szakacskonyv'];
             return $this;
@@ -213,7 +230,8 @@ class Recept extends Page
             $slug = Helpers::SlugGenerator($_POST['recept_nev']);
             $slug = Helpers::SlugVerifier($slug, [ReceptDB::class, 'GetRecept']);
             $alapanyagok = $this->ParseAlapanyagok($_POST['alapanyagok']);
-            $eredmeny = ReceptDB::UjRecept($_POST['recept_nev'], $_POST['recept_szoveg'], $_POST['lathatosag'] ?? 0, $slug, $_POST['adagmeret'], $alapanyagok, $_POST['elokeszuletek'] ?? null, $_POST['sutesido'] ?? null, Settings::$uid);
+            $tapanyagok = $this->TapanyagKalkulacio($alapanyagok);
+            $eredmeny = ReceptDB::UjRecept($_POST['recept_nev'], $_POST['recept_szoveg'], $_POST['lathatosag'] ?? 0, $slug, $_POST['adagmeret'], $alapanyagok, $tapanyagok, $_POST['elokeszuletek'] ?? null, $_POST['sutesido'] ?? null, Settings::$uid);
             if($eredmeny) {
                 $this->redirtarget = ROOT_PATH . '/recept/' . $slug;
 
@@ -242,6 +260,11 @@ class Recept extends Page
         }
         else
             return false;
+    }
+
+    protected function Kategoriak() : bool {
+        $_SESSION['kategoriacimkek'] = $_POST['cimke'] ?? [];
+        return true;
     }
 
     private function ParseAlapanyagok(?array $alapanyagok) : array {
@@ -296,6 +319,28 @@ class Recept extends Page
         return $feldolgozott;
     }
 
+    private function GetCimkek(?array $receptcimkei = null) : array {
+        if($receptcimkei)
+            $kivalasztottcimkek = $receptcimkei;
+        elseif(isset($_SESSION['kategoriacimkek']))
+            $kivalasztottcimkek = $_SESSION['kategoriacimkek'];
+        else
+            $kivalasztottcimkek = [];
+        $mindencimke = CimkeDB::GetCimkek();
+        foreach($mindencimke as &$cimke) {
+            if(in_array($cimke['receptcimke_id'], $kivalasztottcimkek)) {
+                $cimke['kivalasztva'] = true;
+            }
+        }
+        return $mindencimke;
+    }
+
+    protected function CimkeForm() : void {
+        $cimkek = $this->GetCimkek();
+        $this->form = (new FormBuilder());
+        include __DIR__ . "/views/recept/cimkefelho.php";
+    }
+
     public function GetIrasjog(int|string|null|bool $elem_id) : bool {
         if(!$elem_id)
             return false;
@@ -326,11 +371,17 @@ class Recept extends Page
     }
 
     public function Bookmark() : array|bool {
-        if(!isset($_POST['recept_id']))
-            return false;
+        if(!isset($_POST['recept_id'])) {
+            $data['eredmeny'] = false;
+            $data['message'] = 'Nem lett kiválasztva menteni kívánt recept!';
+            return $data;
+        }
 
-        if(!Settings::$uid)
-            return false;
+        if(!Settings::$uid) {
+            $data['eredmeny'] = false;
+            $data['message'] = 'Csak bejelentkezett felhasználók menthetnek el receptet!';
+            return $data;
+        }
 
         $eredmeny = ReceptDB::BookmarkRecept($_POST['recept_id'], Settings::$uid);
         if($eredmeny === null) {

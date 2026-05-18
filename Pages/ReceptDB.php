@@ -146,10 +146,22 @@ class ReceptDB
         return ['recept' => $recept, 'alapanyagok' => $alapanyagok->EscapedArray(), 'kepek' => $kepek->EscapedArray()];
     }
 
-    public static function GetReceptek(int $startindex = 0, int $dbszam = 20) : array {
+    public static function GetReceptek(int $startindex = 0, int $dbszam = 20, ?array $cimkek = null) : array {
         $receptek = new MySQLHandler();
-        $receptek->Prepare(self::$alap_lista_query . self::$alap_lista_query_where . ' GROUP BY receptek.recept_id' . self::$alap_lista_query_order . ' LIMIT ?, ?;');
-        $receptek->Run(Settings::$uid, Settings::$uid, $startindex, $dbszam);
+        if($cimkek == null) {
+            $receptek->Prepare(self::$alap_lista_query . self::$alap_lista_query_where . ' GROUP BY receptek.recept_id' . self::$alap_lista_query_order . ' LIMIT ?, ?;');
+            $receptek->Run(Settings::$uid, Settings::$uid, $startindex, $dbszam);
+        }
+        else {
+            $cimke_ids = [];
+            foreach($cimkek as $cimke)
+                $cimke_ids[] = '?';
+            $qparams = [ Settings::$uid, Settings::$uid, ...$cimkek, $startindex, $dbszam ];
+            $receptek->Prepare(self::$alap_lista_query .
+                ' INNER JOIN cimke_recept ON cimke_recept.recept_id = receptek.recept_id' .
+                self::$alap_lista_query_where . ' AND cimke_recept.receptcimke_id IN (' . implode(',', $cimke_ids) . ') GROUP BY receptek.recept_id' . self::$alap_lista_query_order . ' LIMIT ?, ?;');
+            $receptek->Run(...$qparams);
+        }
 
         return $receptek->EscapedArray();
     }

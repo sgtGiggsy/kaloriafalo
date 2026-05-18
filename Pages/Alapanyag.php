@@ -51,7 +51,7 @@ class Alapanyag extends Page
             }
 
             if(!isset($params['elemid'])) {
-                return new Alapanyag('alapanyagok');
+                return (new Alapanyag('alapanyagok'))->Router($params);
             }
 
             if($params['method'] == 'szerkeszt') {
