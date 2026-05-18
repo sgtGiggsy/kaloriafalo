@@ -150,8 +150,6 @@ class ReceptDB
                     SUM(IF(szakacskonyvek.felhasznalo_id = ?, 1, 0)) AS mentve
                 FROM receptek
                     LEFT JOIN recept_ertekelesek ON recept_ertekelesek.recept_id = receptek.recept_id
-                    LEFT JOIN recept_kepek ON recept_kepek.recept_id = receptek.recept_id
-                    LEFT JOIN feltoltesek ON feltoltesek.feltoltes_id = recept_kepek.feltoltes_id
                     LEFT JOIN szakacskonyv_receptek ON szakacskonyv_receptek.recept_id = receptek.recept_id
                     LEFT JOIN szakacskonyvek ON szakacskonyv_receptek.szakacskonyv_id = szakacskonyvek.szakacskonyv_id
                 WHERE receptek.slug = ?

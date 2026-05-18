@@ -8,8 +8,8 @@ if (!defined('ROOT_PATH')) {
 }
 ?><div class="normalcontent">
     <h1><?=ucfirst($this->alapanyag['alapanyag_nev'])?></h1><?php
+    $alapanyag = $this->alapanyag;
     if($this->irasjog) {
-        $alapanyag = $this->alapanyag;
         ?><a class="anchbutton" href="<?= ROOT_PATH . '/alapanyag/szerkeszt/' . $alapanyag['slug'] ?>">
             Alapanyag szerkesztése
         </a><?php

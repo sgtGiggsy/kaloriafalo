@@ -139,6 +139,7 @@ class Recept extends Page
                 return $recept;
             }
 
+            $this->jsfiles[] = 'Pages/views/recept/assets/recept.js';
             $this->recept = ReceptDB::GetRecept($params['elemid']);
 
             if(!$this->recept)
