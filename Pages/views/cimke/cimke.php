@@ -12,7 +12,7 @@ $cimke = $this->kategoriacimke;
     if($this->irasjog) {
 
         ?><a class="anchbutton" href="<?= ROOT_PATH . '/cimke/szerkeszt/' . $cimke['slug'] ?>">
-            Cimke szerkesztése
+            Címke szerkesztése
         </a><?php
     }
 ?></div>

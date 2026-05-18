@@ -7,7 +7,7 @@ if (!defined('ROOT_PATH')) {
     exit('Forbidden');
 }
 ?><div class="normalcontent">
-    <h1>Új cimke felvitele</h1>
+    <h1>Új címke felvitele</h1>
     <form action="<?=ROOT_PATH?>/cimke/uj" method="post">
         <?=$this->form->Render();?>
         <div class="submit"><input type="submit" value="Cimke létrehozása"></div>

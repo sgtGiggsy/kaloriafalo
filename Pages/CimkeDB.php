@@ -13,7 +13,7 @@ class CimkeDB {
     }
 
     public static function GetCimkek() : ?array {
-        $cimkek = new MySQLHandler("SELECT receptcimke_id, cimke_nev, slug FROM recept_cimkek;");
+        $cimkek = new MySQLHandler("SELECT receptcimke_id, cimke_nev, slug FROM recept_cimkek ORDER BY slug;");
         return $cimkek->EscapedArray();
     }
     public static function UjCimke(string $cimke_nev, string $slug) : bool {

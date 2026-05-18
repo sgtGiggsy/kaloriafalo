@@ -167,7 +167,9 @@ class ReceptDB
                     INNER JOIN feltoltesek ON feltoltesek.feltoltes_id = recept_kepek.feltoltes_id  
                 WHERE recept_id = ?;", $recept['recept_id']);
 
-        return ['recept' => $recept, 'alapanyagok' => $alapanyagok->EscapedArray(), 'kepek' => $kepek->EscapedArray()];
+        $cimkek = new MySQLHandler("SELECT receptcimke_id FROM cimke_recept WHERE recept_id = ?;", $recept['recept_id']);
+
+        return ['recept' => $recept, 'alapanyagok' => $alapanyagok->EscapedArray(), 'kepek' => $kepek->EscapedArray(), 'cimkek' => $cimkek->AsArray(null, true)];
     }
 
     public static function GetReceptek(int $startindex = 0, int $dbszam = 20, ?array $cimkek = null) : array {

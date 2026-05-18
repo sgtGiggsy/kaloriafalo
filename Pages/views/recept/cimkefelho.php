@@ -7,7 +7,7 @@ if (!defined('ROOT_PATH')) {
     http_response_code(403);
     exit('Forbidden');
 }
-?><h1>Cimkék</h1>
+?><h2>Címkék</h2>
 <div class="cimkefelho"><?php
     foreach ($cimkek as $cimke) {
         $checked = !empty($cimke['kivalasztva']) ? 'checked' : '';

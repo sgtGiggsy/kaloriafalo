@@ -6,6 +6,7 @@ if (!defined('ROOT_PATH')) {
 }
 $recept = $this->recept['recept'];
 $alapanyagok = $this->recept['alapanyagok'];
+$cimkek = $this->recept['cimkek'];
 ?><div class="receptoldal">
     <h1><?=ucfirst($recept['recept_nev'])?></h1><?php
     if($this->irasjog) {
@@ -22,6 +23,9 @@ $alapanyagok = $this->recept['alapanyagok'];
     </div>
 
     <div>
+        <div>
+            <?=$this->CimkeForm($cimkek, true)?>
+        </div>
         <h2>Összetevők</h2>
         <div class="alapanyagok">
             <ul><?php

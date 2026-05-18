@@ -162,6 +162,7 @@ class Recept extends Page
 
         if($this->selectedpage == 'receptek') {
             $this->jsfiles[] = 'Pages/views/recept/assets/kereses.js';
+            $this->jsfiles[] = 'Pages/views/recept/assets/receptek.js';
             $kereses = null;
             if(isset($params['method']) && isset($params['elemid']) && $params['method'] == 'kereses')
                 $kereses = $params['elemid'];
@@ -416,21 +417,18 @@ class Recept extends Page
         else
             $kivalasztottcimkek = [];
 
+        $rcimkereturn = [];
         $mindencimke = CimkeDB::GetCimkek();
         foreach($mindencimke as &$cimke) {
             if(in_array($cimke['receptcimke_id'], $kivalasztottcimkek)) {
                 $cimke['kivalasztva'] = true;
+                if($receptcimkei)
+                    $rcimkereturn[] = $cimke;
             }
         }
 
-        if($receptcimkei) {
-            $kivalasztottcimkek = [];
-            foreach($mindencimke as $cimke) {
-                if($cimke['kivalasztva'] == true)
-                    $kivalasztottcimkek[] = $cimke;
-            }
-            $mindencimke = $kivalasztottcimkek;
-        }
+        if($receptcimkei)
+            return $rcimkereturn;
 
         return $mindencimke;
     }

@@ -8,11 +8,11 @@ if (!defined('ROOT_PATH')) {
     exit('Forbidden');
 }
 ?><div class="normalcontent">
-    <h1>Cimkék listája</h1><?php
+    <h1>Címkék listája</h1><?php
     $cimkek = $this->kategoriacimke;
     if(Settings::$uid) {
         ?><a class="anchbutton" href="<?= ROOT_PATH . '/cimke/uj' ?>">
-            Új cimke felvitele
+            Új címke felvitele
         </a><?php
     }
     ?><?=Helpers::RenderArrayAsTable($cimkek, 'cimke', 'slug');?>

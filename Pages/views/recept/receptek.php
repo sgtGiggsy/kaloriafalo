@@ -63,6 +63,7 @@ if (!defined('ROOT_PATH')) {
             <?=$this->Cimkeform()?>
             <?=$this->form->Render();?>
             <input type="submit" id="kategoria_szur" value="Szűrés"/>
+            <input type="submit" id="szurtorol" value="Szűrők törlése"/>
         </form>
     </div>
 </div>
