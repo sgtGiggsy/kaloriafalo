@@ -18,7 +18,7 @@ if (!defined('ROOT_PATH')) {
         <div class="receptlista"><?php
             if(count($this->recept) == 0) {
                 if($this->params['method'] == 'kereses') {
-                    echo '<h2>Nincs találat ' . Helpers::NeveloHatarozo($this->params['elemid']) . ' keresőkifejezése!</h2>';
+                    echo '<h2>Nincs találat ' . Helpers::NeveloHatarozo($this->params['elemid']) . ' keresőkifejezésre!</h2>';
                 } else {
                     echo '<h2>Még nincsenek nyilvánosan elérhető receptek!</h2>';
                 }

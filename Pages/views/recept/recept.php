@@ -29,7 +29,7 @@ $cimkek = $this->recept['cimkek'];
 
     <div>
         <div>
-            <?=$this->CimkeForm($cimkek)?>
+            <?=(count($cimkek) > 0) ? $this->CimkeForm($cimkek) : "<h2>Címkék</h2>" ?>
         </div>
         <h2>Összetevők</h2>
         <div class="alapanyagok">

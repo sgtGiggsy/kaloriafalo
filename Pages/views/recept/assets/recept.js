@@ -16,17 +16,17 @@ images.forEach(img => {
     });
 });
 
-closeBtn.addEventListener('click', () => {
+closeBtn?.addEventListener('click', () => {
     receptoverlay.classList.remove('active');
 });
 
-receptoverlay.addEventListener('click', (e) => {
+receptoverlay?.addEventListener('click', (e) => {
     if (e.target === receptoverlay) {
         receptoverlay.classList.remove('active');
     }
 });
 
-torlesBtn.addEventListener('click', (e) => {
+torlesBtn?.addEventListener('click', (e) => {
     e.preventDefault();
     Swal.fire({
         title: "Biztos vagy benne, hogy törölni szeretnéd a receptet?",

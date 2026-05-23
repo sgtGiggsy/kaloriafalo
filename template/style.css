@@ -569,6 +569,7 @@ footer {
 .doublecolumn, .double2-1 {
     display: grid;
     gap: 1em;
+    margin: 0 0.5em;
 }
 
 .doublecolumn {
@@ -732,7 +733,6 @@ footer {
 
 .kereses {
     display: flex;
-    flex-direction: row;
     background-color: var(--footerbg);
     padding: 3em;
     justify-content: center;
@@ -1156,6 +1156,7 @@ footer {
     max-height: 150px;
     overflow-y: auto;
     z-index: 1000;
+    top: -10px;
 }
 
 .autocomplete-list div {
@@ -1382,6 +1383,20 @@ footer {
 
     #linkek.open {
         left: 0;
+    }
+
+    .receptoldal {
+        grid-template-columns: 1fr;
+    }
+
+    .receptlista a {
+        margin-left: 0;
+    }
+
+    .kereses {
+        padding: 0.5em;
+        width: 100%;
+        margin: 0;
     }
 }
 
