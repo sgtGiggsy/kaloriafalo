@@ -77,6 +77,7 @@ class HutoszekrenyDB
                     JOIN recept_alapanyagok ON recept_alapanyagok.recept_id = receptek.recept_id
                     JOIN alapanyagok ON alapanyagok.alapanyag_id = recept_alapanyagok.alapanyag_id
                     LEFT JOIN hutoszekreny_tartalmak ON hutoszekreny_tartalmak.alapanyag_id = recept_alapanyagok.alapanyag_id AND hutoszekreny_tartalmak.huto_id = ?
+                WHERE receptek.letezik = 1
                 GROUP BY receptek.recept_id
                 HAVING hianyzo_db < 4
                 ORDER BY hianyzo_db ASC

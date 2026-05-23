@@ -108,7 +108,7 @@ class Recept extends Page
     ];
 
     public function Router(array $params) : Page {
-        $this->validpagemethods = ['uj', 'szerkeszt', 'kereses', 'kategoriak'];
+        $this->validpagemethods = ['uj', 'szerkeszt', 'torol', 'kereses', 'kategoriak'];
         $params = $this->ParseGet($params);
         $this->params = $params;
         if($this->selectedpage == 'receptek' || $this->selectedpage == 'recept' || $this->selectedpage == 'szakacskonyv') {
@@ -152,9 +152,14 @@ class Recept extends Page
                 $this->view = $this->views['szerkeszt'];
                 $this->PHPvarsToJS['iterator'] = count($this->recept['alapanyagok']);
             }
-            elseif(!$params['method'] == 'szerkeszt' && !$this->GetOlvasasjog($params['elemid']))
+            if($params['method'] == 'torol' && Settings::$uid && $this->irasjog) {
+                $this->redirtarget = ROOT_PATH . '/receptek';
+                $this->muvelet = 'torol';
+            }
+            elseif($params['method'] != 'szerkeszt' && !$this->GetOlvasasjog($params['elemid']))
                 return new SinglePage('403');
             else {
+                $this->PHPvarsToJS['recept_id'] = $this->recept['recept']['recept_id'];
                 $this->view = $this->views['recept'];
                 $this->headerview = $this->headerviews['recept'];
             }
@@ -357,6 +362,13 @@ class Recept extends Page
         }
         else
             return false;
+    }
+
+    protected function Torol () : bool {
+        if(!$this->GetIrasjog($_POST['recept_id']))
+            return false;
+
+        return ReceptDB::ReceptTorol($_POST['recept_id']);
     }
 
     protected function Kategoriak() : bool {

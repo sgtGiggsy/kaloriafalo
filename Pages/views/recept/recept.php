@@ -10,9 +10,14 @@ $cimkek = $this->recept['cimkek'];
 ?><div class="receptoldal">
     <h1><?=ucfirst($recept['recept_nev'])?></h1><?php
     if($this->irasjog) {
-        ?><a class="anchbutton" href="<?= ROOT_PATH . '/recept/szerkeszt/' . $recept['slug'] ?>">
-            Recept szerkesztése
-        </a><?php
+        ?><div class="szerkesztesdiv">
+            <a class="anchbutton" href="<?= ROOT_PATH . '/recept/szerkeszt/' . $recept['slug'] ?>">
+                Recept szerkesztése
+            </a>
+            <a class="anchbutton" id="torles" href="<?= ROOT_PATH . '/recept/torol/' . $recept['slug'] ?>">
+                Recept Törlése
+            </a>
+        </div><?php
     }
     else {
         echo "<div></div>";

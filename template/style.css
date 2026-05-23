@@ -37,6 +37,8 @@
     --shadow: #ccc;
     --receptelembg: #fff;
     --receptadatlapbg: #bbbbbb70;
+    --alertcolor: #a30000;
+    --okaycolor: #1ba300;
 }
 
 *, *:before, *:after {
@@ -788,6 +790,12 @@ footer {
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+.szerkesztesdiv {
+    height: fit-content;
+    display: flex;
+    gap: 1em;
 }
 
 .anchbutton {

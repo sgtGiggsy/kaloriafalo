@@ -20,11 +20,13 @@ class ReceptDB
                     LEFT JOIN szakacskonyv_receptek ON szakacskonyv_receptek.recept_id = receptek.recept_id
                     LEFT JOIN szakacskonyvek ON szakacskonyv_receptek.szakacskonyv_id = szakacskonyvek.szakacskonyv_id";
     private static string $alap_lista_query_where = " WHERE (lathatosag = 1 OR (lathatosag = 0 AND receptek.felhasznalo_id = ?))
-                    AND (recept_kepek.elsodleges IS NULL OR recept_kepek.elsodleges = 1)";
+                    AND (recept_kepek.elsodleges IS NULL OR recept_kepek.elsodleges = 1)
+                    AND receptek.letezik = 1";
 
     private static string $szakacskonyv_lista_query_where = " WHERE (lathatosag = 1 OR lathatosag = 0 AND receptek.felhasznalo_id = ?)
                     AND (recept_kepek.elsodleges IS NULL OR recept_kepek.elsodleges = 1)
-                    AND szakacskonyvek.felhasznalo_id = ?";
+                    AND szakacskonyvek.felhasznalo_id = ?
+                    AND receptek.letezik = 1";
 
     private static string $alap_lista_query_order = " ORDER BY ertekeles DESC";
     public static function UjRecept(string $recept_nev, string $recept_szoveg, int $lathatosag, $slug, ?string $adagmeret, array $alapanyagok, ?int $elokeszuletek, ?int $sutesido, string $tapanyagtabla, int $uid) : int|bool {
@@ -101,6 +103,11 @@ class ReceptDB
             $receptgyarto->Commit();
             return $recept_id;
         }
+    }
+
+    public static function ReceptTorol(int $recept_id) : bool {
+        $toroldb = new MySQLHandler("UPDATE receptek SET letezik = 0 WHERE recept_id = ?;", $recept_id);
+        return $toroldb->siker;
     }
 
     public static function ReceptKepek(int $recept_id, array $kepidk) : bool {
@@ -223,7 +230,7 @@ class ReceptDB
                     LEFT JOIN recept_ertekelesek ON recept_ertekelesek.recept_id = receptek.recept_id
                     LEFT JOIN szakacskonyv_receptek ON szakacskonyv_receptek.recept_id = receptek.recept_id
                     LEFT JOIN szakacskonyvek ON szakacskonyv_receptek.szakacskonyv_id = szakacskonyvek.szakacskonyv_id
-                WHERE receptek.slug = ?
+                WHERE receptek.slug = ? AND receptek.letezik = 1
                 GROUP BY receptek.recept_id;", Settings::$uid, $slug);
         if($recept->sorokszama == 0)
             return null;
@@ -271,8 +278,11 @@ class ReceptDB
         // Tudom, hogy ezzel csökkentem a prepared statement biztonságát, de egyrészt a Settings:$uid értéke
         // nem user-től érkezik, másrészt a GetFuzzyList függvényt komolyabban módosítani kellene,
         // hogy kezelni tudjon egynél több változót, és erre most nincs időm.
-        $where = str_replace('?', Settings::$uid, self::$alap_lista_query_where);
-        $alapquery = str_replace('?', Settings::$uid, self::$alap_lista_query);
+        $uid = Settings::$uid;
+        if(!$uid)
+            $uid = 0;
+        $where = str_replace('?', $uid, self::$alap_lista_query_where);
+        $alapquery = str_replace('?', $uid, self::$alap_lista_query);
         $receptek->Prepare($alapquery . $where . ' AND recept_nev LIKE ? GROUP BY receptek.recept_id' . self::$alap_lista_query_order);
         return $receptek->GetFuzzyList($searcharr, $column_name);
     }
