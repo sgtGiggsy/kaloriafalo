@@ -32,9 +32,14 @@ if (!defined('ROOT_PATH')) {
                         $ures = 'active';
                         $teli = '';
                     }
+                    if(!$recept['kepurl'])
+                        $kepurl = ROOT_PATH . '/template/assets/images/defelem.jpg';
+                    else
+                        $kepurl = ROOT_PATH . $recept['kepurl'];
+
                     ?><a href="<?=ROOT_PATH?>/recept/<?=$recept['slug']?>">
                         <div class="receptelem">
-                            <div class="receptelemkep"><img src="<?=ROOT_PATH . $recept['kepurl']?>" alt="Kép <?=$recept['recept_nev']?>-ről"/></div>
+                            <div class="receptelemkep"><img src="<?=$kepurl?>" alt="Kép <?=$recept['recept_nev']?>-ről"/></div>
                             <div class="receptadatok">
                                 <h2><?=$recept['recept_nev']?></h2>
                                 <div class="spreader"></div>

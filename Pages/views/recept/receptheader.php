@@ -7,10 +7,20 @@ if (!defined('ROOT_PATH')) {
     exit('Forbidden');
 }
 $recept = $this->recept['recept'];
-$kepek = $this->recept['kepek'];
-$fejkep = reset($kepek);
-$tapanyagtabla = json_decode($recept['tapanyagtablazat'], true);
-?><div class="header" style="background-image: url('<?=ROOT_PATH . $fejkep['fajl'] ?>')">
+if($this->recept['kepek']) {
+    $kepek = $this->recept['kepek'];
+    $fejkep = ROOT_PATH . (reset($kepek))['fajl'];
+}
+else {
+    $fejkep = ROOT_PATH . '/template/assets/images/defheader.jpg';
+}
+if($recept['tapanyagtablazat']) {
+    $tapanyagtabla = json_decode($recept['tapanyagtablazat'], true);
+}
+else {
+    $tapanyagtabla = ['kaloria' => null, 'szenhidrat' => null, 'zsir' => null, 'feherje' => null];
+}
+?><div class="header" style="background-image: url('<?=$fejkep?>')">
     <h1 style="display:none"><svg>
         <text x="0" y="50" stroke="black" fill="white">
             <?=ucfirst($recept['recept_nev'])?>

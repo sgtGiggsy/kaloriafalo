@@ -157,25 +157,25 @@ class Helpers
         </table><?php
     }
 
+    public static function levHasonlosag(string $needle, string $haystack) : int {
+        $needle = mb_strtolower($needle);
+        $haystack = mb_strtolower($haystack);
+
+        $score = levenshtein($needle, $haystack);
+
+        if ($needle === $haystack)
+            $score -= 100;
+        if (str_starts_with($haystack, $needle))
+            $score -= 20;
+        if (str_contains($haystack, $needle))
+            $score -= 5;
+
+        return $score;
+    }
+
     public static function FuzzySearch(array $dbresult, string $needle, string $oszlopnev) : array {
-         function levHasonlosag(string $needle, string $haystack) : int {
-            $needle = mb_strtolower($needle);
-            $haystack = mb_strtolower($haystack);
-
-            $score = levenshtein($needle, $haystack);
-
-            if ($needle === $haystack)
-                $score -= 100;
-            if (str_starts_with($haystack, $needle))
-                $score -= 20;
-            if (str_contains($haystack, $needle))
-                $score -= 5;
-
-            return $score;
-        }
-
         foreach ($dbresult as &$row) {
-            $row['_score'] = levHasonlosag($needle, $row[$oszlopnev]);
+            $row['_score'] = self::levHasonlosag($needle, $row[$oszlopnev]);
         }
 
         usort($dbresult, fn($a, $b) => $a['_score'] <=> $b['_score']);
@@ -189,7 +189,7 @@ class Helpers
         $tmp = '';
         $limit = min(count($chars), 4);
         for($i=0; $i < $limit; $i++) {
-            $needle .= $chars[$i] . '%';
+            $needle .= $chars[$i] . '_';
         }
         for ($i = 0; $i < $limit - 1; $i++) {
             $tmp = $chars;
