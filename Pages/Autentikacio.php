@@ -43,8 +43,13 @@ class Autentikacio extends Page
             }
         }
 
+        if($this->selectedpage == 'jelszocsere') {
+            $this->jsfiles = ['Pages/views/autentikacio/assets/inputValid.js'];
+        }
+
         if($this->selectedpage == 'elfelejtettjelszo') {
             if($params['method'] == 'megerosit') {
+                $this->jsfiles = ['Pages/views/autentikacio/assets/inputValid.js'];
                 $this->megerosit = $this->ElfelejtettJelszoMegerosit($params['elemid']);
                 $this->view = $this->views['ujjelszo'];
             }
