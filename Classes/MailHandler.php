@@ -26,8 +26,11 @@ class MailHandler
         $this->mail->Password   = $GLOBALS['MAIL_PASSWORD'];
         $this->mail->setFrom($GLOBALS['MAIL_FROM'], $GLOBALS['MAIL_FROMNEV']);
         $this->mail->isSMTP();
-        $this->mail->SMTPAuth   = false; //! ÉLES KÖRNYEZETBEN TRUE-RA TENNI!!!
-        $this->mail->SMTPSecure = false; // ÉLES KÖRNYEZETBEN:  PHPMailer::ENCRYPTION_STARTTLS;
+        $this->mail->SMTPAuth   = $GLOBALS['MAIL_SMTPAUTH'];
+        if($GLOBALS['MAIL_SMTPSECURE'])
+            $this->mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        else
+            $this->mail->SMTPSecure = false;
         $this->mail->CharSet = "UTF-8";
         $this->mail->isHTML(true);
         $this->mail->SMTPOptions = array(
