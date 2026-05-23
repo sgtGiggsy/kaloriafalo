@@ -25,7 +25,7 @@ class ReceptDB
 
     private static string $szakacskonyv_lista_query_where = " WHERE (lathatosag = 1 OR lathatosag = 0 AND receptek.felhasznalo_id = ?)
                     AND (recept_kepek.elsodleges IS NULL OR recept_kepek.elsodleges = 1)
-                    AND szakacskonyvek.felhasznalo_id = ?
+                    AND (szakacskonyvek.felhasznalo_id = ? OR receptek.felhasznalo_id = ?)
                     AND receptek.letezik = 1";
 
     private static string $alap_lista_query_order = " ORDER BY ertekeles DESC";
@@ -291,16 +291,14 @@ class ReceptDB
         $receptek = new MySQLHandler(self::$alap_lista_query .
             self::$szakacskonyv_lista_query_where .
             ' GROUP BY receptek.recept_id' .
-            self::$alap_lista_query_order, Settings::$uid, Settings::$uid, Settings::$uid);
+            self::$alap_lista_query_order, Settings::$uid, Settings::$uid, Settings::$uid, Settings::$uid);
         return $receptek->EscapedArray();
     }
 
     public static function GetReceptIrasjog(?int $felhasznalo_id, int $elem_id) : bool {
-        if(Settings::$admin)
-            return true;
         if($felhasznalo_id == null)
             return false;
-        $irasjog = new MySQLHandler("SELECT slug FROM receptek WHERE recept_id = ? OR slug = ? AND felhasznalo_id = ?;", $elem_id, $elem_id, $felhasznalo_id);
+        $irasjog = new MySQLHandler("SELECT slug FROM receptek WHERE (recept_id = ? OR slug = ?) AND felhasznalo_id = ?;", $elem_id, $elem_id, $felhasznalo_id);
         if($irasjog->sorokszama == 0)
             return false;
         else

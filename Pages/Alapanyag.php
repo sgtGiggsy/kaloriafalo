@@ -159,6 +159,12 @@ class Alapanyag extends Page
             return false;
     }
 
+    public function GetOlvasasjog(int|string $elem_id) : bool {
+        if(Settings::$uid)
+            return true;
+        return false;
+    }
+
     public function Form(string $type, ?array $alapanyag = null) : FormBuilder {
         $form = (new FormBuilder())
             ->Text('alapanyag_nev', 'Alapanyag név', true)

@@ -2,6 +2,8 @@
 
 namespace Kaloriafalo\Pages;
 
+use HTMLPurifier;
+use HTMLPurifier_Config;
 use Kaloriafalo\Classes\FeltoltesHandler;
 use Kaloriafalo\Classes\FormBuilder;
 use Kaloriafalo\Classes\Helpers;
@@ -152,7 +154,7 @@ class Recept extends Page
                 $this->view = $this->views['szerkeszt'];
                 $this->PHPvarsToJS['iterator'] = count($this->recept['alapanyagok']);
             }
-            if($params['method'] == 'torol' && Settings::$uid && $this->irasjog) {
+            elseif($params['method'] == 'torol' && Settings::$uid && $this->irasjog) {
                 $this->redirtarget = ROOT_PATH . '/receptek';
                 $this->muvelet = 'torol';
             }
@@ -282,7 +284,7 @@ class Recept extends Page
     private function Form(string $muvelet, ?array $recept = null) : FormBuilder {
         $form = (new FormBuilder())
             ->TextBox('recept_szoveg', 'Recept szövege')
-            ->Number('elokeszuletek', 'Mennyi ideig tart a főzés/sütés előkészítse?')
+            ->Number('elokeszuletek', 'Mennyi ideig tart a főzés/sütés előkészítése?')
             ->Number('sutesido', 'Mennyi a főzés/sütés ideje?')
             ->Number('adagmeret', 'Adag (Hány főre elég?)')
             ->Checkbox('lathatosag', 'Recept látható nyilvánosan');
@@ -308,7 +310,10 @@ class Recept extends Page
             $slug = Helpers::SlugVerifier($slug, [ReceptDB::class, 'GetRecept']);
             $alapanyagok = $this->ParseAlapanyagok($_POST['alapanyagok']);
             $tapanyagok = $this->TapanyagKalkulacio($alapanyagok['alapanyagok']);
-            $eredmeny = ReceptDB::UjRecept($_POST['recept_nev'], $_POST['recept_szoveg'], $_POST['lathatosag'] ?? 0, $slug, $_POST['adagmeret'], $alapanyagok, $_POST['elokeszuletek'] ?? null, $_POST['sutesido'] ?? null, $tapanyagok, Settings::$uid);
+            $config = HTMLPurifier_Config::createDefault();
+            $purifier = new HTMLPurifier($config);
+            $recept_szoveg = $purifier->purify($_POST['recept_szoveg']);
+            $eredmeny = ReceptDB::UjRecept($_POST['recept_nev'], $recept_szoveg, $_POST['lathatosag'] ?? 0, $slug, $_POST['adagmeret'], $alapanyagok, $_POST['elokeszuletek'] ?? null, $_POST['sutesido'] ?? null, $tapanyagok, Settings::$uid);
             if($eredmeny) {
                 $this->redirtarget = ROOT_PATH . '/recept/' . $slug;
 
@@ -334,7 +339,10 @@ class Recept extends Page
             $kepidk = null;
             $alapanyagok = $this->ParseAlapanyagok($_POST['alapanyagok']);
             $tapanyagok = $this->TapanyagKalkulacio($alapanyagok['alapanyagok']);
-            $eredmeny = ReceptDB::ReceptSzerkeszt($_POST['recept_nev'], $_POST['recept_szoveg'], $_POST['lathatosag'] ?? 0, $_POST['adagmeret'], $alapanyagok, $_POST['elokeszuletek'] ?? null, $_POST['sutesido'] ?? null, $tapanyagok, Settings::$uid, $_POST['recept_id']);
+            $config = HTMLPurifier_Config::createDefault();
+            $purifier = new HTMLPurifier($config);
+            $recept_szoveg = $purifier->purify($_POST['recept_szoveg']);
+            $eredmeny = ReceptDB::ReceptSzerkeszt($_POST['recept_nev'], $recept_szoveg, $_POST['lathatosag'] ?? 0, $_POST['adagmeret'], $alapanyagok, $_POST['elokeszuletek'] ?? null, $_POST['sutesido'] ?? null, $tapanyagok, Settings::$uid, $_POST['recept_id']);
             if($eredmeny) {
                 $this->redirtarget = ROOT_PATH . '/recept/' . $_POST['slug'];
 
