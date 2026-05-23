@@ -1,40 +1,56 @@
 document.querySelectorAll('.autocomplete').forEach(createAutocomplete);
 
 function createAutocomplete(input) {
-    // API meghívása ha a felhasználó megáll a bevitellel egy pillanatra
+    let tippek = [];
+    let activeIndex = -1;
+    let controller = null;
+    let debounceTimer = null;
+
+    const row = input.closest('.alapanyag-sor');
+    const hidden = row.querySelector('input[type="hidden"]');
+
+    const dropdown = document.createElement('div');
+    dropdown.classList.add('autocomplete-list');
+    document.body.appendChild(dropdown);
+
     input.addEventListener('input', () => {
         clearTimeout(debounceTimer);
 
         debounceTimer = setTimeout(async () => {
             const val = input.value.trim();
 
-            if(!val) {
-                dropdown.innerHTML = '';
+            if (!val) {
+                clearDropdown();
                 return;
             }
 
-            if(controller) controller.abort();
+            if (controller) controller.abort();
             controller = new AbortController();
 
-            const res = await fetch(RootPath + `/api/alapanyag/kereses/${encodeURIComponent(val)}`, {
-                signal: controller.signal
-            });
+            try {
+                const res = await fetch(
+                    RootPath + `/api/alapanyag/kereses/${encodeURIComponent(val)}`,
+                    { signal: controller.signal }
+                );
 
-            const json = await res.json();
+                const json = await res.json();
 
-            tippek = json.data || [];
-            activeIndex = -1;
+                tippek = json.data || [];
+                activeIndex = -1;
 
-            render();
+                render();
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    clearDropdown();
+                }
+            }
         }, 200);
     });
 
-    // Billentyűzetes navigáció
     input.addEventListener('keydown', (e) => {
-        if(!tippek.length && e.key !== 'Backspace')
-            return;
+        if (!tippek.length && e.key !== 'Backspace') return;
 
-        switch(e.key) {
+        switch (e.key) {
             case 'ArrowDown':
                 e.preventDefault();
                 activeIndex = (activeIndex + 1) % tippek.length;
@@ -55,73 +71,117 @@ function createAutocomplete(input) {
             case 'Backspace':
                 handleBackspace();
                 break;
+
+            case 'Escape':
+                clearDropdown();
+                break;
         }
     });
 
-    // Dropdown menü renderelése
+    input.addEventListener('blur', () => {
+        setTimeout(() => {
+            if (!dropdown.contains(document.activeElement)) {
+                clearDropdown();
+            }
+        }, 0);
+    });
+
+    dropdown.addEventListener('focusout', () => {
+        setTimeout(() => {
+            if (
+                document.activeElement !== input &&
+                !dropdown.contains(document.activeElement)
+            ) {
+                clearDropdown();
+            }
+        }, 0);
+    });
+
+    window.addEventListener('scroll', positionDropdown);
+    window.addEventListener('resize', positionDropdown);
+
     function render() {
         dropdown.innerHTML = '';
+
+        if (!tippek.length) return;
+
         positionDropdown();
 
         tippek.forEach((item, i) => {
             const div = document.createElement('div');
             div.textContent = item.alapanyag;
+            div.tabIndex = 0;
 
-            if (i === activeIndex) div.classList.add('active');
+            if (i === activeIndex) {
+                div.classList.add('active');
+            }
 
             div.addEventListener('mousedown', (e) => {
-                e.preventDefault(); // ne blur-öljön
+                e.preventDefault();
                 select(item);
+            });
+
+            div.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    select(item);
+                }
+
+                if (e.key === 'Escape') {
+                    clearDropdown();
+                    input.focus();
+                }
             });
 
             dropdown.appendChild(div);
         });
     }
 
-    // Elem kiválasztása
     function select(item) {
         input.value = item.alapanyag;
         hidden.value = item.alapanyag_id;
 
-        dropdown.innerHTML = '';
-
+        clearDropdown();
         addNextRow();
     }
 
-    // Következő mezőre ugrás
     function addNextRow() {
         const container = document.getElementById('alapanyagok');
 
-        const row = document.createElement('div');
-        row.classList.add('alapanyag-sor');
+        const newRow = document.createElement('div');
+        newRow.classList.add('alapanyag-sor');
 
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.classList.add('autocomplete');
+        const newInput = document.createElement('input');
+        newInput.type = 'text';
+        newInput.classList.add('autocomplete');
 
-        const hidden = document.createElement('input');
-        hidden.type = 'hidden';
-        hidden.name = 'alapanyagok[]';
+        const newHidden = document.createElement('input');
+        newHidden.type = 'hidden';
+        newHidden.name = 'alapanyagok[]';
 
-        row.appendChild(input);
-        row.appendChild(hidden);
+        newRow.appendChild(newInput);
+        newRow.appendChild(newHidden);
 
-        container.appendChild(row);
+        container.appendChild(newRow);
 
-        createAutocomplete(input);
+        createAutocomplete(newInput);
 
-        input.focus();
+        newInput.focus();
     }
 
-    // Backspace billentyű leütésének kezelése
     function handleBackspace() {
         if (input.value === '') {
             const prevRow = row.previousElementSibling;
 
             if (prevRow) {
                 row.remove();
+
                 const prevInput = prevRow.querySelector('.autocomplete');
+
                 prevInput.focus();
+
+                const len = prevInput.value.length;
+                prevInput.setSelectionRange(len, len);
             }
         }
     }
@@ -135,16 +195,9 @@ function createAutocomplete(input) {
         dropdown.style.width = `${rect.width}px`;
     }
 
-    let tippek = [];
-    let activeIndex = -1;
-    let controller = null;
-    let debounceTimer = null;
-
-    const row = input.closest('.alapanyag-sor');
-    const hidden = row.querySelector('input[type="hidden"]');
-
-    const dropdown = document.createElement('div');
-    dropdown.classList.add('autocomplete-list');
-    document.body.appendChild(dropdown);
-
+    function clearDropdown() {
+        tippek = [];
+        activeIndex = -1;
+        dropdown.innerHTML = '';
+    }
 }
