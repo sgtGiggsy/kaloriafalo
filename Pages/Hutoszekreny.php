@@ -1,6 +1,6 @@
 <?php
 
-namespace Kaloriafalo\pages;
+namespace Kaloriafalo\Pages;
 
 use Kaloriafalo\Classes\FormBuilder;
 use Kaloriafalo\Classes\Settings;

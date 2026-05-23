@@ -136,7 +136,7 @@ class APIResult
             return false;
         }
 
-        // Van kiválasztottt metódus, validnak is van jelezve, viszont az osztályban nincs definiálva
+        // Van kiválasztott metódus, validnak is van jelezve, viszont az osztályban nincs definiálva
         if($request['method'] && !method_exists($page, $page->apimethods[$requestmethod][$request['method']])) {
             $this->message = 'A kiválasztott metódus nincs definiálva';
             $this->status = 404;

@@ -29,7 +29,7 @@ $userszint = Helpers::UserSzint();
     foreach (Oldalgyujto::Menupontok() as $kulcs => $menuelem) {
         if($menuelem['menuben']
             && ($menuelem['lathatosag'] == "mindenki"
-                || ($menuelem['lathatosag'] != "vendeg" && Jogszint::{$menuelem['lathatosag']}->value <= $userszint))
+                || ($menuelem['lathatosag'] != "vendeg" && Oldalgyujto::$jogszintek[$menuelem['lathatosag']] <= $userszint))
                 || ($menuelem['lathatosag'] == "vendeg" && $userszint == 0)
             ) {
 

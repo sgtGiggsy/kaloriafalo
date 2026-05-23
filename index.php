@@ -39,7 +39,8 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Cross site reference támadások elleni védelem inicializálása
-Controller::CSRFGenerator();
+if(!isset($_SESSION['csrf_token']))
+    Controller::CSRFGenerator();
 
 // Bot detektálás
 Logging::BotDetection($botscore, $bot_ok);
@@ -121,11 +122,12 @@ Settings::$jsfiles[] = "Pages/views/_assets/js/sitefunctions.js";
 Settings::$PHPvarsToJS['csrf_token'] = $_SESSION['csrf_token'];
 Settings::$PHPvarsToJS['RootPath'] = ROOT_PATH;
 
-// Oldal megjelenítése
+// Üzleti logika, és view kiválasztás
 $controller = new Controller();
 $controller->Run();
 $page = $controller->page;
 
+// Oldal megjelenítése
 require("./template/index.tpl.php");
 
 $_SESSION['response_codes'][] = http_response_code();

@@ -17,6 +17,7 @@ var toaster = Swal.mixin({
     }
 })
 
+
 function goBack() {
     window.history.back();
 };

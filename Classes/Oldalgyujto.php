@@ -241,6 +241,14 @@ class Oldalgyujto
             'handler' => SinglePage::class]
     ];
 
+    public static array $jogszintek =  [
+        'mindenki' => 0,
+        'vendeg' => 1,
+        'tagok' => 2,
+        'adminok' => 3,
+        'foadminok' => 4
+    ];
+
     public static function Menupontok() : array {
         $rendezett = array_filter(self::$oldalak, function ($item) {
             return $item['menuben'] == true;
