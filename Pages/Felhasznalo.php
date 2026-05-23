@@ -43,6 +43,10 @@ class Felhasznalo extends Page
             }
 
             if($params['method'] == 'szerkesztes') {
+                if(!Settings::$foadmin && $this->felhasznalo['szint'] == 3) {
+                    return new SinglePage(403);
+                }
+
                 $this->muvelet = 'szerkesztes';
                 $this->view = $this->views['szerkesztes'];
                 $this->form = $this->Form($this->felhasznalo);
@@ -100,6 +104,11 @@ class Felhasznalo extends Page
         $pkepid = null;
         if(!isset($_POST['felhasznalo_id'])) {
             $this->mixintext = "Nem lett kiválasztva módosítani kívánt felhasználó!";
+            return false;
+        }
+
+        if(!Settings::$foadmin && $this->felhasznalo['szint'] == 3) {
+            $this->mixintext = "Egy főadmin fiókját csak főadmin szerkesztheti!";
             return false;
         }
 
